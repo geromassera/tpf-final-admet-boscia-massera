@@ -1,0 +1,23 @@
+{
+  "name": "peluqueria-api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "morgan": "^1.10.0",
+    "sequelize": "^6.37.7",
+    "sqlite3": "^5.1.7"
+  }
+}
