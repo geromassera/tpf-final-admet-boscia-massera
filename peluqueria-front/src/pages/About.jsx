@@ -1,12 +1,10 @@
 import { Container, Row, Col, Card, Image, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
 
-// Reemplazá estas importaciones por las rutas reales de tus imágenes
-// Ej: import localImg from "../assets/local.jpg";
-const localImg = "/images/local-placeholder.jpg"; // <-- reemplazar
-const teamImg1 = "/images/team-1.jpg"; // <-- reemplazar
-const teamImg2 = "/images/team-2.jpg"; // <-- reemplazar
-const teamImg3 = "/images/team-3.jpg"; // <-- reemplazar
+const localImg = "./local-placeholder.png";
+const teamImg1 = "./team-1.png";
+const teamImg2 = "./team-2.png";
+const teamImg3 = "./team-3.png";
 
 const AboutUs = () => {
   return (
