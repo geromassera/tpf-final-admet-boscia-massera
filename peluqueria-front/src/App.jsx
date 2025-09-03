@@ -16,6 +16,7 @@ import Contact from "./pages/Contact";
 import Profile from "./pages/Profile";
 import LoggedRoute from "./components/routes/LoggedRoute";
 import NotFound from "./pages/NotFound";
+import About from "./pages/About";
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register></Register>} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/aboutus" element={<About />} />
             <Route path="/services" element={<Services />}></Route>
             <Route path="/appointments" element={<CustomerView />} />
             <Route

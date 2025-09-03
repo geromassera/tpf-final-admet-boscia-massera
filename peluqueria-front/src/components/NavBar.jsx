@@ -42,6 +42,9 @@ function NavBar() {
             <Nav.Link as={Link} to="/contact">
               Contacto
             </Nav.Link>
+            <Nav.Link as={Link} to="/aboutus">
+              Sobre nosotros
+            </Nav.Link>
           </Nav>
           <Nav>
             {!isLoggedIn ? (
