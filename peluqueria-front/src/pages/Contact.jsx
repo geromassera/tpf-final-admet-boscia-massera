@@ -9,19 +9,20 @@ const Contact = () => {
           <Card className="shadow-sm p-4">
             <Card.Body>
               <Card.Text>
-                <strong>📍 Dirección:</strong> Av. Francia 1375, Rosario, Santa
-                Fé
+                <strong>📍 Locales:</strong>
               </Card.Text>
+              <ul>
+                <li>Av. Francia 1375, Rosario, Santa Fé</li>
+                <li>Av. Pellegrini 2500, Rosario, Santa Fé</li>
+              </ul>
               <Card.Text>
                 <strong>📞 Teléfono:</strong> +54 9 341 392 1175
               </Card.Text>
               <Card.Text>
-                <strong>📧 Email:</strong> contacto@peluqueria.com
+                <strong>📧 Email:</strong> contacto@hairsync.com
               </Card.Text>
               <Card.Text>
-                <strong>🕘 Horarios:</strong>
-                <br />
-                Lunes a Sabados: 10:00 - 19:00
+                <strong>🕘 Horarios:</strong> Lunes a Sabados: 10:00 - 19:00
               </Card.Text>
             </Card.Body>
           </Card>

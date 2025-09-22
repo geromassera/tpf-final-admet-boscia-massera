@@ -1,7 +1,8 @@
 import { Container, Row, Col, Card, Image, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
 
-const localImg = "./local-placeholder.png";
+const localImg1 = "./local-placeholder.png";
+const localImg2 = "./local-placeholder-2.png";
 const teamImg1 = "./team-1.png";
 const teamImg2 = "./team-2.png";
 const teamImg3 = "./team-3.png";
@@ -11,6 +12,104 @@ const AboutUs = () => {
     <Container className="my-5">
       <h2 className="text-center mb-4">Sobre Nosotros</h2>
 
+      {/* Nuestros Locales */}
+      <Col md={12} className="mt-4">
+        <h3 className="text-center mb-3">Nuestros Locales</h3>
+        <Row className="g-3 justify-content-center">
+          <Col xs={12} sm={6} md={5} lg={4}>
+            <Card className="shadow-sm h-100">
+              <Image
+                src={localImg1}
+                fluid
+                alt="Local Av. Francia"
+                style={{ maxHeight: 200, objectFit: "cover" }}
+              />
+              <Card.Body className="text-center">
+                <Card.Title>Local Av. Francia</Card.Title>
+                <Card.Text>Av. Francia 1375, Rosario</Card.Text>
+              </Card.Body>
+            </Card>
+          </Col>
+
+          <Col xs={12} sm={6} md={5} lg={4}>
+            <Card className="shadow-sm h-100">
+              <Image
+                src={localImg2}
+                fluid
+                alt="Local Av. Pellegrini"
+                style={{ maxHeight: 200, objectFit: "cover" }}
+              />
+              <Card.Body className="text-center">
+                <Card.Title>Local Av. Pellegrini</Card.Title>
+                <Card.Text>Av. Pellegrini 2500, Rosario</Card.Text>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Col>
+
+      {/* Nuestro equipo */}
+      <Col md={12} className="mt-4">
+        <h3 className="text-center mb-3">Nuestro equipo</h3>
+        <Row className="g-3 justify-content-center">
+          <Col
+            xs={12}
+            sm={6}
+            md={4}
+            lg={3}
+            className="d-flex justify-content-center"
+          >
+            <figure className="text-center">
+              <Image
+                src={teamImg1}
+                roundedCircle
+                fluid
+                alt="Equipo - 1"
+                style={{ width: 180, height: 180, objectFit: "cover" }}
+              />
+              <figcaption className="mt-2">Martín</figcaption>
+            </figure>
+          </Col>
+
+          <Col
+            xs={12}
+            sm={6}
+            md={4}
+            lg={3}
+            className="d-flex justify-content-center"
+          >
+            <figure className="text-center">
+              <Image
+                src={teamImg2}
+                roundedCircle
+                fluid
+                alt="Equipo - 2"
+                style={{ width: 180, height: 180, objectFit: "cover" }}
+              />
+              <figcaption className="mt-2">Laura</figcaption>
+            </figure>
+          </Col>
+
+          <Col
+            xs={12}
+            sm={6}
+            md={4}
+            lg={3}
+            className="d-flex justify-content-center"
+          >
+            <figure className="text-center">
+              <Image
+                src={teamImg3}
+                roundedCircle
+                fluid
+                alt="Equipo - 3"
+                style={{ width: 180, height: 180, objectFit: "cover" }}
+              />
+              <figcaption className="mt-2">Julián</figcaption>
+            </figure>
+          </Col>
+        </Row>
+      </Col>
       <Row className="gy-4">
         {/* Historia */}
         <Col md={6} lg={6}>
@@ -107,88 +206,6 @@ const AboutUs = () => {
           </Card>
         </Col>
 
-        {/* Galería: local y equipo */}
-        <Col md={12} className="mt-2">
-          <h3 className="text-center mb-3">Galería</h3>
-          <Row className="g-3 justify-content-center">
-            <Col
-              xs={12}
-              sm={6}
-              md={4}
-              lg={3}
-              className="d-flex justify-content-center"
-            >
-              <figure className="text-center">
-                <Image
-                  src={localImg}
-                  rounded
-                  fluid
-                  alt="Imagen del local"
-                  style={{ maxHeight: 180, objectFit: "cover" }}
-                />
-                <figcaption className="mt-2">Nuestro local</figcaption>
-              </figure>
-            </Col>
-
-            <Col
-              xs={12}
-              sm={6}
-              md={4}
-              lg={3}
-              className="d-flex justify-content-center"
-            >
-              <figure className="text-center">
-                <Image
-                  src={teamImg1}
-                  roundedCircle
-                  fluid
-                  alt="Equipo - 1"
-                  style={{ width: 180, height: 180, objectFit: "cover" }}
-                />
-                <figcaption className="mt-2">Equipo: Martín</figcaption>
-              </figure>
-            </Col>
-
-            <Col
-              xs={12}
-              sm={6}
-              md={4}
-              lg={3}
-              className="d-flex justify-content-center"
-            >
-              <figure className="text-center">
-                <Image
-                  src={teamImg2}
-                  roundedCircle
-                  fluid
-                  alt="Equipo - 2"
-                  style={{ width: 180, height: 180, objectFit: "cover" }}
-                />
-                <figcaption className="mt-2">Equipo: Laura</figcaption>
-              </figure>
-            </Col>
-
-            <Col
-              xs={12}
-              sm={6}
-              md={4}
-              lg={3}
-              className="d-flex justify-content-center"
-            >
-              <figure className="text-center">
-                <Image
-                  src={teamImg3}
-                  roundedCircle
-                  fluid
-                  alt="Equipo - 3"
-                  style={{ width: 180, height: 180, objectFit: "cover" }}
-                />
-                <figcaption className="mt-2">Equipo: Julián</figcaption>
-              </figure>
-            </Col>
-          </Row>
-        </Col>
-
         {/* Footer CTA pequeño */}
         <Col md={8} className="mx-auto mt-4">
           <Card className="text-center shadow-sm p-3">
@@ -196,8 +213,8 @@ const AboutUs = () => {
               <Card.Text>
                 <strong>¿Querés conocernos en persona?</strong>
                 <br />
-                Pasate por nuestro local o reservá un turno online. Estamos en
-                Av. Francia 1375, Rosario.
+                Pasate por cualquiera de nuestros locales o reservá un turno
+                online.
               </Card.Text>
 
               <div>

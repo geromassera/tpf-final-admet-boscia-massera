@@ -17,6 +17,8 @@ import Profile from "./pages/Profile";
 import LoggedRoute from "./components/routes/LoggedRoute";
 import NotFound from "./pages/NotFound";
 import About from "./pages/About";
+import Reviews from "./pages/Reviews";
+import BarberRoute from "./components/routes/BarberRoute";
 
 function App() {
   return (
@@ -48,7 +50,15 @@ function App() {
                 </AdminRoute>
               }
             />
-            <Route path="/barbersView" element={<BarberView />} />
+            <Route
+              path="/barbersView"
+              element={
+                <BarberRoute>
+                  <BarberView />
+                </BarberRoute>
+              }
+            />
+            <Route path="/reviews" element={<Reviews />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
