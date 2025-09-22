@@ -11,9 +11,9 @@ import { useNavigate } from "react-router-dom";
 const Profile = () => {
   const { user, handleUserLogin, handleUserLogout } = useContext(
     AuthenticationContext
-  ); 
+  );
   const [editMode, setEditMode] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false); 
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || "",
     email: user?.email || "",
@@ -82,7 +82,6 @@ const Profile = () => {
             <Card.Text>
               <strong>Nombre y apellido:</strong> {user.name} <br />
               <strong>Email:</strong> {user.email} <br />
-              <strong>Rol:</strong> {user.role}
             </Card.Text>
 
             {!editMode ? (
