@@ -21,27 +21,27 @@ const BarberView = () => {
     }
   };
 
-  const handleTakeAppointment = async (appointmentId) => {
-    console.log("Usuario logueado:", user);
-    try {
-      const res = await fetch(
-        `http://localhost:3000/appointments/${appointmentId}/assign`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ barber_id: user.user_id }),
-        }
-      );
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || "Error al tomar el turno");
-      }
-      successToast("Turno asignado correctamente");
-      fetchAppointments();
-    } catch (err) {
-      errorToast(err.message);
-    }
-  };
+  // const handleTakeAppointment = async (appointmentId) => {
+  //   console.log("Usuario logueado:", user);
+  //   try {
+  //     const res = await fetch(
+  //       `http://localhost:3000/appointments/${appointmentId}/assign`,
+  //       {
+  //         method: "PUT",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify({ barber_id: user.user_id }),
+  //       }
+  //     );
+  //     if (!res.ok) {
+  //       const data = await res.json();
+  //       throw new Error(data.message || "Error al tomar el turno");
+  //     }
+  //     successToast("Turno asignado correctamente");
+  //     fetchAppointments();
+  //   } catch (err) {
+  //     errorToast(err.message);
+  //   }
+  // };
 
   const handleCancelAppointment = async (appointmentId) => {
     try {
@@ -63,9 +63,9 @@ const BarberView = () => {
     fetchAppointments();
   }, []);
 
-  const availableAppointments = appointments.filter(
-    (appt) => appt.barber_id === null && appt.status === "Pendiente"
-  );
+  // const availableAppointments = appointments.filter(
+  //   (appt) => appt.barber_id === null && appt.status === "Pendiente"
+  // );
 
   const assignedAppointments = appointments.filter(
     (appt) => appt.barber_id === user.user_id && appt.status === "Asignado"
@@ -73,7 +73,7 @@ const BarberView = () => {
 
   return (
     <div className="container mt-5">
-      <h3>Turnos disponibles</h3>
+      {/* <h3>Turnos disponibles</h3>
       {availableAppointments.length === 0 ? (
         <p>No hay turnos disponibles</p>
       ) : (
@@ -109,7 +109,7 @@ const BarberView = () => {
             ))}
           </tbody>
         </Table>
-      )}
+      )} */}
 
       <h3 className="mt-5">Mis turnos asignados</h3>
       {assignedAppointments.length === 0 ? (

@@ -18,6 +18,7 @@ import LoggedRoute from "./components/routes/LoggedRoute";
 import NotFound from "./pages/NotFound";
 import About from "./pages/About";
 import Reviews from "./pages/Reviews";
+import WorkWithUs from "./pages/WorkWithUs";
 import BarberRoute from "./components/routes/BarberRoute";
 
 function App() {
@@ -59,6 +60,7 @@ function App() {
               }
             />
             <Route path="/reviews" element={<Reviews />} />
+            <Route path="/workWithUs" element={<WorkWithUs />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
