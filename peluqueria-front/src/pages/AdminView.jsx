@@ -162,7 +162,18 @@ const ManageUsers = () => {
                 >
                   Asignar rol admin
                 </Button>
-              </td>
+
+                {user.role === "Barber" && (
+                  <Button
+                    variant="info"
+                    size="sm"
+                    className="ms-2"
+                    onClick={() => alert("Abrir modal o selector de sucursal")}
+                  >
+                    Asignar sucursal
+                  </Button>
+                )}
+              </td> 
             </tr>
           ))}
         </tbody>

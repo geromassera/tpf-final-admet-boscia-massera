@@ -160,56 +160,73 @@ const CostumerView = () => {
       <Card className="p-4 shadow mb-4">
         <Card.Body>
           <h4 className="mb-3">Reservar nuevo turno</h4>
-          <Form onSubmit={handleSubmit}>
-            <Row className="g-2 mb-3">
-              <Col md={4}>
-                <Form.Select
-                  name="service"
-                  value={form.service}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Selecciona un servicio</option>
-                  <option value="Corte">Corte</option>
-                  <option value="Corte y barba">Corte y barba</option>
-                  <option value="Peinado">Peinado</option>
-                  <option value="Coloracion">Coloración</option>
-                  <option value="Barba">Barba</option>
-                </Form.Select>
-              </Col>
-              <Col md={3}>
-                <Form.Control
-                  type="date"
-                  name="appointment_date"
-                  value={form.appointment_date}
-                  onChange={handleChange}
-                  min={minDate}
-                  max={maxDate}
-                  required
-                />
-              </Col>
-              <Col md={3}>
-                <Form.Select
-                  name="appointment_time"
-                  value={form.appointment_time}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Seleccionar hora</option>
-                  {generarOpcionesHora().map((hora, idx) => (
-                    <option key={idx} value={hora}>
-                      {hora}
-                    </option>
-                  ))}
-                </Form.Select>
-              </Col>
-              <Col md={2}>
-                <Button type="submit" variant="primary" className="w-100">
-                  Reservar
-                </Button>
-              </Col>
-            </Row>
-          </Form>
+            <Form onSubmit={handleSubmit}>
+              <Row className="g-3 align-items-end">
+                <Col md={3}>
+                  <Form.Select
+                    name="service"
+                    value={form.service}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">Selecciona un servicio</option>
+                    <option value="Corte">Corte</option>
+                    <option value="Corte y barba">Corte y barba</option>
+                    <option value="Peinado">Peinado</option>
+                    <option value="Coloracion">Coloración</option>
+                    <option value="Barba">Barba</option>
+                  </Form.Select>
+                </Col>
+
+                <Col md={2}>
+                  <Form.Control
+                    type="date"
+                    name="appointment_date"
+                    value={form.appointment_date}
+                    onChange={handleChange}
+                    min={minDate}
+                    max={maxDate}
+                    required
+                  />
+                </Col>
+
+                <Col md={2}>
+                  <Form.Select
+                    name="appointment_time"
+                    value={form.appointment_time}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">Seleccionar hora</option>
+                    {generarOpcionesHora().map((hora, idx) => (
+                      <option key={idx} value={hora}>
+                        {hora}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Col>
+
+                <Col md={3}>
+                  <Form.Select
+                    name="barber_id"
+                    value={form.barber_id}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="any">Barbero </option>
+                    <option value="Martin">Martin</option>
+                    <option value= "Laura">Laura</option>
+                    <option value="Julián">Julián</option>
+                  </Form.Select>
+                </Col>
+
+                <Col md={2}>
+                  <Button type="submit" variant="primary" className="w-100">
+                    Reservar
+                  </Button>
+                </Col>
+              </Row>
+            </Form>
         </Card.Body>
       </Card>
 

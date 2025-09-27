@@ -10,7 +10,8 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [errors, setErrors] = useState({ email: false, password: false });
+  const[number, setNumber] = useState("");
+  const [errors, setErrors] = useState({ email: false, password: false, number: false });
   const navigate = useNavigate();
 
   const handleEmailChange = (event) => {
@@ -25,19 +26,43 @@ const Register = () => {
     setName(event.target.value);
   };
 
+  const handleNumberChange = (event) => {
+    setNumber(event.target.value);
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    let hasError = false;
+    const newErrors = { email: false, password: false, number: false };
+
     if (!email) {
-      setErrors({ ...errors, email: true });
-      return;
+      newErrors.email = true;
+      hasError = true;
     }
     if (!password) {
-      setErrors({ ...errors, password: true });
+      newErrors.password = true;
+      hasError = true;
+    }
+
+    const numberRegex = /^[0-9]{10}$/;
+    if (!number) {
+      newErrors.number = true;
+      hasError = true;
+    } else if (!numberRegex.test(number.replace(/\s+/g, ""))) {
+      newErrors.number = true;
+      hasError = true;
+    }
+
+    if (hasError) {
+      setErrors(newErrors);
       return;
     }
+
     const newUser = {
       name,
       email,
+      number,
       password,
     };
     try {
@@ -91,6 +116,19 @@ const Register = () => {
                 value={email}
               />
               {errors.email && <p>El email es requerido.</p>}
+              </FormGroup>
+            <FormGroup className="mb-3">
+              <Form.Control
+                type="tel"
+                required
+                className={errors.number && "border border-danger"}
+                placeholder="Ingresar teléfono (10 dígitos)"
+                onChange={handleNumberChange}
+                pattern="[0-9]{10}"
+                title="El teléfono debe tener exactamente 10 dígitos, sin espacios ni letras"
+                value={number}
+              />
+              {errors.number && <p>El teléfono es requerido.</p>}
             </FormGroup>
             <FormGroup className="mb-3">
               <Form.Control
@@ -100,7 +138,7 @@ const Register = () => {
                 onChange={handlePasswordChange}
                 value={password}
               />
-              {errors.password && <p>El password es requerido.</p>}
+              {errors.password && <p>La contraseña es requerida.</p>}
             </FormGroup>
             <div className="d-flex justify-content-center mb-3">
               <Button variant="primary" type="submit" className="me-2">

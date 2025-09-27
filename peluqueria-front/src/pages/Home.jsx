@@ -77,8 +77,8 @@ const Home = () => {
       </div>
 
       <Row className="mt-5">
-        <Col md={4} className="mb-4">
-          <Card>
+        <Col md={4} className="mb-4 d-flex">
+          <Card className="h-100">
             <Card.Img variant="top" src="./cortepelo.jpg" />
             <Card.Body>
               <Card.Title>Cortes Modernos</Card.Title>
@@ -87,8 +87,8 @@ const Home = () => {
           </Card>
         </Col>
 
-        <Col md={4} className="mb-4">
-          <Card>
+        <Col md={4} className="mb-4 d-flex">
+          <Card className="h-100">
             <Card.Img variant="top" src="./coloracion.jpg" />
             <Card.Body>
               <Card.Title>Coloración Profesional</Card.Title>
@@ -99,8 +99,8 @@ const Home = () => {
           </Card>
         </Col>
 
-        <Col md={4} className="mb-4">
-          <Card>
+        <Col md={4} className="mb-4 d-flex">
+          <Card className="h-100">
             <Card.Img variant="top" src="./hombrebarba.jpg" />
             <Card.Body>
               <Card.Title>Barba</Card.Title>
