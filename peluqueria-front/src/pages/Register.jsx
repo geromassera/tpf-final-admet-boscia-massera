@@ -5,13 +5,21 @@ import {
   errorToast,
   successToast,
 } from "../components/ui/toast//NotificationToast";
+import api from "../components/services/API/Axios";
 
 const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const[number, setNumber] = useState("");
-  const [errors, setErrors] = useState({ email: false, password: false, number: false });
+  const [surname, setSurname] = useState("");
+  const [phone, setPhone] = useState("");
+  const [errors, setErrors] = useState({
+    name: false,
+    surname: false,
+    email: false,
+    password: false,
+    phone: false,
+  });
   const navigate = useNavigate();
 
   const handleEmailChange = (event) => {
@@ -26,15 +34,34 @@ const Register = () => {
     setName(event.target.value);
   };
 
-  const handleNumberChange = (event) => {
-    setNumber(event.target.value);
+  const handleSurnameChange = (event) => {
+    setSurname(event.target.value);
+  };
+
+  const handlePhoneChange = (event) => {
+    setPhone(event.target.value);
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
     let hasError = false;
-    const newErrors = { email: false, password: false, number: false };
+    const newErrors = {
+      name: false,
+      surname: false,
+      email: false,
+      password: false,
+      phone: false,
+    };
+
+    if (!name) {
+      newErrors.name = true;
+      hasError = true;
+    }
+    if (!surname) {
+      newErrors.surname = true;
+      hasError = true;
+    }
 
     if (!email) {
       newErrors.email = true;
@@ -45,12 +72,12 @@ const Register = () => {
       hasError = true;
     }
 
-    const numberRegex = /^[0-9]{10}$/;
-    if (!number) {
-      newErrors.number = true;
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phone) {
+      newErrors.phone = true;
       hasError = true;
-    } else if (!numberRegex.test(number.replace(/\s+/g, ""))) {
-      newErrors.number = true;
+    } else if (!phoneRegex.test(phone.replace(/\s+/g, ""))) {
+      newErrors.phone = true;
       hasError = true;
     }
 
@@ -61,28 +88,21 @@ const Register = () => {
 
     const newUser = {
       name,
+      surname,
       email,
-      number,
+      phone,
       password,
     };
     try {
-      const res = await fetch("http://localhost:3000/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newUser),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        const message = data?.message || "Error al registrar usuario.";
-        errorToast(message);
-        return;
-      }
+      const res = await api.post("/authentication/register", newUser);
       successToast(
         "Usuario registrado exitosamente. Inicie sesión para continuar."
       );
       setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
-      errorToast("Error al registrar usuario.");
+      const message =
+        err.response?.data?.message || "Error al registrar usuario.";
+      errorToast(message);
     }
   };
 
@@ -100,12 +120,27 @@ const Register = () => {
             <FormGroup className="mb-3">
               <Form.Control
                 type="text"
+                className={errors.name && "border border-danger"}
                 required
-                placeholder="Ingrese su nombre y apellido"
+                placeholder="Ingrese su nombre"
                 onChange={handleNameChange}
                 value={name}
               />
+              {errors.name && <p>El nombre es requerido.</p>}
             </FormGroup>
+
+            <FormGroup className="mb-3">
+              <Form.Control
+                type="text"
+                className={errors.surname && "border border-danger"}
+                required
+                placeholder="Ingrese su apellido"
+                onChange={handleSurnameChange}
+                value={surname}
+              />
+              {errors.surname && <p>El apellido es requerido.</p>}
+            </FormGroup>
+
             <FormGroup className="mb-3">
               <Form.Control
                 type="email"
@@ -116,19 +151,19 @@ const Register = () => {
                 value={email}
               />
               {errors.email && <p>El email es requerido.</p>}
-              </FormGroup>
+            </FormGroup>
             <FormGroup className="mb-3">
               <Form.Control
                 type="tel"
                 required
-                className={errors.number && "border border-danger"}
+                className={errors.phone && "border border-danger"}
                 placeholder="Ingresar teléfono (10 dígitos)"
-                onChange={handleNumberChange}
+                onChange={handlePhoneChange}
                 pattern="[0-9]{10}"
-                title="El teléfono debe tener exactamente 10 dígitos, sin espacios ni letras"
-                value={number}
+                title="El teléfono debe tener exactamente 10 dígitos, sin espacios ni letras."
+                value={phone}
               />
-              {errors.number && <p>El teléfono es requerido.</p>}
+              {errors.phone && <p>El teléfono es requerido.</p>}
             </FormGroup>
             <FormGroup className="mb-3">
               <Form.Control

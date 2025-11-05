@@ -1,4 +1,4 @@
-import { useState, useRef, useContext } from "react";
+import { useState, useContext } from "react"; // <-- Quitamos useRef, no es necesario
 import { Button, Card, Col, Form, FormGroup, Row } from "react-bootstrap";
 import { useNavigate } from "react-router";
 import {
@@ -6,14 +6,13 @@ import {
   errorToast,
 } from "../components/ui/toast/NotificationToast";
 import { AuthenticationContext } from "../components/services/auth.context";
+import api from "../components/services/API/Axios";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState({ email: false, password: false });
+  const [errors, setErrors] = useState({ email: null, password: null });
   const navigate = useNavigate();
-  const emailRef = useRef(null);
-  const passwordRef = useRef(null);
 
   const { handleUserLogin } = useContext(AuthenticationContext);
 
@@ -25,45 +24,55 @@ const Login = () => {
     setPassword(event.target.value);
   };
 
+  const validateForm = () => {
+    const newErrors = { email: null, password: null };
+    let hasError = false;
+
+    if (!email) {
+      newErrors.email = "El email es requerido.";
+      hasError = true;
+    }
+    if (!password) {
+      newErrors.password = "La contraseña es requerida.";
+      hasError = true;
+    }
+    setErrors(newErrors);
+    return hasError;
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!emailRef.current.value) {
-      setErrors({ ...errors, email: true });
-      emailRef.current.focus();
+    if (validateForm()) {
       return;
     }
-    if (!passwordRef.current.value) {
-      setErrors({ ...errors, password: true });
-      passwordRef.current.focus();
-      return;
-    }
-    const email = emailRef.current.value;
-    const password = passwordRef.current.value;
-    try {
-      const res = await fetch("http://localhost:3000/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Error al iniciar sesión");
-      }
+    setErrors({ email: null, password: null });
 
-      const userData = await res.json();
-      localStorage.setItem("user_id", userData.user_id);
-      handleUserLogin(userData);
-      console.log(userData);
+    try {
+      const response = await api.post("/authentication/login", {
+        email,
+        password,
+      });
+
+      const authResult = response.data;
+
+      handleUserLogin(authResult);
+
       successToast("Inicio de sesión exitoso.");
-      if (userData.role === "Admin") {
+
+      const userRole = authResult.user?.role;
+
+      if (userRole === "Admin") {
         navigate("/admin");
-      } else if (userData.role === "Barber") {
+      } else if (userRole === "Barber") {
         navigate("/barbersView");
       } else {
         navigate("/");
       }
     } catch (err) {
-      errorToast(err.message);
+      const message =
+        err.response?.data?.message ||
+        "Error al iniciar sesión. Verifique sus credenciales.";
+      errorToast(message);
     }
   };
 
@@ -86,20 +95,23 @@ const Login = () => {
                 placeholder="Ingresar email"
                 onChange={handleEmailChange}
                 value={email}
-                ref={emailRef}
               />
-              {errors.email && <p>El email es requerido.</p>}
+              {errors.email && (
+                <p className="text-danger mt-1">{errors.email}</p>
+              )}
             </FormGroup>
             <FormGroup className="mb-3">
               <Form.Control
                 type="password"
                 className={errors.password && "border border-danger"}
+                M
                 placeholder="Ingresar contraseña"
                 onChange={handlePasswordChange}
                 value={password}
-                ref={passwordRef}
               />
-              {errors.password && <p>El password es requerido.</p>}
+              {errors.password && (
+                <p className="text-danger mt-1">{errors.password}</p>
+              )}
             </FormGroup>
             <div className="d-flex justify-content-center mb-3">
               <Button variant="primary" type="submit" className="me-2">

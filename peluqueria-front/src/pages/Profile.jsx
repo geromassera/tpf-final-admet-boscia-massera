@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { AuthenticationContext } from "../components/services/auth.context";
 import { Form, Button, Container, Card } from "react-bootstrap";
 import {
@@ -7,60 +7,83 @@ import {
 } from "../components/ui/toast/NotificationToast";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
 import { useNavigate } from "react-router-dom";
+import api from "../components/services/API/Axios";
 
 const Profile = () => {
-  const { user, handleUserLogin, handleUserLogout } = useContext(
+  const { user, handleUserUpdate, handleUserLogout } = useContext(
     AuthenticationContext
   );
   const [editMode, setEditMode] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || "",
+    surname: user?.surname || "",
     email: user?.email || "",
+    phone: user?.phone || "",
     password: "",
   });
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || "",
+        surname: user.surname || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        password: "",
+      });
+    }
+  }, [user]);
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleDelete = async () => {
     try {
-      const res = await fetch(`http://localhost:3000/users/${user.user_id}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) throw new Error("Error al eliminar cuenta");
-
-      successToast("Cuenta eliminada correctamente");
+      await api.delete("/user/me");
+      successToast("Cuenta eliminada correctamente.");
       handleUserLogout();
       navigate("/");
     } catch (err) {
-      errorToast(err.message);
+      errorToast(err.response?.data?.message || "Error al eliminar cuenta");
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const dtoToSend = {
+      name: formData.name,
+      surname: formData.surname,
+      email: formData.email,
+      phone: formData.phone,
+    };
+
+    if (formData.password) {
+      dtoToSend.password = formData.password;
+    }
+
     try {
-      const res = await fetch(`http://localhost:3000/users/${user.user_id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+      const response = await api.put("/user/me", dtoToSend);
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || "Error al actualizar perfil");
-      }
+      const updatedUser = response.data;
+      handleUserUpdate(updatedUser);
 
-      const updatedUser = await res.json();
-      handleUserLogin(updatedUser.user);
-      successToast("Perfil actualizado con éxito");
+      successToast("Perfil actualizado correctamente.");
       setEditMode(false);
     } catch (err) {
-      errorToast(err.message);
+      console.error("Error al actualizar perfil:", err);
+      if (err.response?.status === 400 && err.response.data?.errors) {
+        const validationErrors = Object.values(err.response.data.errors).flat();
+        errorToast(validationErrors[0] || "Error de validación.");
+      } else {
+        // Tu lógica de antes
+        const message =
+          err.response?.data?.message || "Error al actualizar perfil.";
+        errorToast(message);
+      }
     }
   };
 
@@ -80,8 +103,10 @@ const Profile = () => {
           <Card.Body>
             <Card.Title>Mi Perfil</Card.Title>
             <Card.Text>
-              <strong>Nombre y apellido:</strong> {user.name} <br />
+              <strong>Nombre</strong> {user.name} <br />
+              <strong>Apellido:</strong> {user?.surname} <br />
               <strong>Email:</strong> {user.email} <br />
+              <strong>Teléfono:</strong> {user?.phone} <br />
             </Card.Text>
 
             {!editMode ? (
@@ -103,11 +128,22 @@ const Profile = () => {
             ) : (
               <Form onSubmit={handleSubmit} className="mt-4">
                 <Form.Group className="mb-3" controlId="formName">
-                  <Form.Label>Nombre y apellido</Form.Label>
+                  <Form.Label>Nombre</Form.Label>
                   <Form.Control
                     type="text"
                     name="name"
                     value={formData.name}
+                    onChange={handleChange}
+                    required
+                  />
+                </Form.Group>
+
+                <Form.Group className="mb-3" controlId="formSurname">
+                  <Form.Label>Apellido</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="surname"
+                    value={formData.surname}
                     onChange={handleChange}
                     required
                   />
@@ -119,6 +155,17 @@ const Profile = () => {
                     type="email"
                     name="email"
                     value={formData.email}
+                    onChange={handleChange}
+                    required
+                  />
+                </Form.Group>
+
+                <Form.Group className="mb-3" controlId="formPhone">
+                  <Form.Label>Teléfono</Form.Label>
+                  <Form.Control
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
                     onChange={handleChange}
                     required
                   />

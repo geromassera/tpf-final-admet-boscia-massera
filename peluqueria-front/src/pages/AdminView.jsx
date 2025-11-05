@@ -1,179 +1,145 @@
 import { useEffect, useState } from "react";
-import { Button, Table } from "react-bootstrap";
+import {
+  Button,
+  Table,
+  Form,
+  InputGroup,
+  Container,
+  Row,
+  Col,
+  ButtonGroup,
+} from "react-bootstrap";
 import {
   successToast,
   errorToast,
 } from "../components/ui/toast/NotificationToast";
 import ConfirmAdminModal from "../components/ConfirmAdminModal";
+import api from "../components/services/API/Axios";
 
-const ManageUsers = () => {
+// --- Panel 1: Gestión de Usuarios ---
+const UsersPanel = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [showAdminModal, setShowAdminModal] = useState(false);
-
-  const [appointments, setAppointments] = useState([]);
-  const [loadingAppointments, setLoadingAppointments] = useState(true);
+  const [filterText, setFilterText] = useState("");
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch("http://localhost:3000/users");
-      const data = await res.json();
-      setUsers(data);
+      setLoading(true);
+      const response = await api.get("/admin/users");
+      setUsers(response.data);
     } catch (err) {
-      errorToast(err.message || "Error al obtener los usuarios.");
+      errorToast(
+        err.response?.data?.message || "Error al obtener los usuarios."
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchAppointments = async () => {
-    try {
-      setLoadingAppointments(true);
-      const res = await fetch("http://localhost:3000/appointments");
-      const data = await res.json();
-      setAppointments(data);
-    } catch (err) {
-      errorToast(err.message || "Error al obtener los turnos.");
-    } finally {
-      setLoadingAppointments(false);
-    }
-  };
-
-  const handleMakeBarber = async (userId) => {
-    try {
-      const res = await fetch(`http://localhost:3000/users/${userId}/barber`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: "barber" }),
-      });
-
-      if (!res.ok)
-        throw new Error(
-          (await res.json()).message || "Error al asignar el rol"
-        );
-
-      successToast("Rol asignado correctamente.");
-      fetchUsers();
-    } catch (err) {
-      errorToast(err.message || "Hubo un problema.");
-    }
-  };
-
-  const handleRevertToCustomer = async (userId) => {
-    try {
-      const res = await fetch(
-        `http://localhost:3000/users/${userId}/customer`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ role: "customer" }),
-        }
-      );
-
-      if (!res.ok)
-        throw new Error(
-          (await res.json()).message || "Error al revertir el rol"
-        );
-
-      successToast("Rol revertido correctamente.");
-      fetchUsers();
-    } catch (err) {
-      errorToast(err.message || "Hubo un problema.");
-    }
-  };
-
-  const handleConfirmAdmin = async () => {
-    try {
-      const res = await fetch(
-        `http://localhost:3000/users/${selectedUserId}/admin`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ role: "admin" }),
-        }
-      );
-
-      if (!res.ok)
-        throw new Error(
-          (await res.json()).message || "Error al asignar el rol admin"
-        );
-
-      successToast("Rol admin asignado correctamente.");
-      setShowAdminModal(false);
-      setSelectedUserId(null);
-      fetchUsers();
-    } catch (err) {
-      errorToast(err.message || "No se pudo asignar el rol.");
-    }
-  };
-
   useEffect(() => {
     fetchUsers();
-    fetchAppointments(); 
   }, []);
+
+  const handleChangeRole = async (userId, newRole) => {
+    try {
+      await api.patch(`/admin/users/${userId}/role`, { newRole });
+      successToast(`Rol ${newRole} asignado correctamente.`);
+      fetchUsers();
+    } catch (err) {
+      console.log("Error al cambiar el rol:", err);
+      errorToast(err.response?.data?.message || "Hubo un problema.");
+    }
+  };
+
+  const handleConfirmAdmin = () => {
+    if (selectedUserId) {
+      handleChangeRole(selectedUserId, "Admin");
+    }
+    setShowAdminModal(false);
+    setSelectedUserId(null);
+  };
 
   if (loading) return <p>Cargando usuarios...</p>;
 
+  const filteredUsers = users.filter((user) =>
+    (user.surname || "").toLowerCase().includes(filterText.toLowerCase())
+  );
+
   return (
-    <div className="container mt-5">
+    <>
       <h3>Gestión de Usuarios</h3>
-      <Table striped bordered hover>
+
+      <Form.Group className="mb-3" controlId="userSearch">
+        <Form.Label>Buscar por apellido:</Form.Label>
+        <Form.Control
+          type="text"
+          placeholder="Ingrese un apellido para filtrar..."
+          value={filterText}
+          onChange={(e) => setFilterText(e.target.value)}
+        />
+      </Form.Group>
+
+      <Table striped bordered hover responsive>
         <thead>
           <tr>
+            <th>ID</th>
             <th>Nombre</th>
+            <th>Apellido</th>
             <th>Email</th>
             <th>Rol</th>
             <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
-          {users.map((user) => (
-            <tr key={user.user_id}>
+          {filteredUsers.map((user) => (
+            <tr key={user.userId}>
+              <td>{user.userId}</td>
               <td>{user.name}</td>
+              <td>{user.surname}</td>
               <td>{user.email}</td>
               <td>{user.role}</td>
               <td>
-                <Button
-                  variant="success"
-                  size="sm"
-                  onClick={() => handleMakeBarber(user.user_id)}
-                >
-                  Asignar rol barber
-                </Button>
+                {user.role === "Admin" ? (
+                  <span className="text-muted fst-italic">
+                    No se puede modificar
+                  </span>
+                ) : (
+                  <>
+                    <Button
+                      variant="success"
+                      size="sm"
+                      onClick={() => handleChangeRole(user.userId, "Barber")}
+                      disabled={user.role === "Barber"}
+                    >
+                      Hacer Barbero
+                    </Button>
 
-                <Button
-                  variant="danger"
-                  size="sm"
-                  className="ms-2"
-                  onClick={() => handleRevertToCustomer(user.user_id)}
-                >
-                  Revertir a cliente
-                </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      className="ms-2"
+                      onClick={() => handleChangeRole(user.userId, "Client")}
+                      disabled={user.role === "Client"}
+                    >
+                      Hacer Cliente
+                    </Button>
 
-                <Button
-                  variant="warning"
-                  size="sm"
-                  className="ms-2"
-                  onClick={() => {
-                    setSelectedUserId(user.user_id);
-                    setShowAdminModal(true);
-                  }}
-                >
-                  Asignar rol admin
-                </Button>
-
-                {user.role === "Barber" && (
-                  <Button
-                    variant="info"
-                    size="sm"
-                    className="ms-2"
-                    onClick={() => alert("Abrir modal o selector de sucursal")}
-                  >
-                    Asignar sucursal
-                  </Button>
+                    <Button
+                      variant="warning"
+                      size="sm"
+                      className="ms-2"
+                      onClick={() => {
+                        setSelectedUserId(user.userId);
+                        setShowAdminModal(true);
+                      }}
+                    >
+                      Hacer Admin
+                    </Button>
+                  </>
                 )}
-              </td> 
+              </td>
             </tr>
           ))}
         </tbody>
@@ -184,38 +150,259 @@ const ManageUsers = () => {
         handleClose={() => setShowAdminModal(false)}
         handleConfirm={handleConfirmAdmin}
       />
-
-      <h3 className="mt-5">Historial de Turnos</h3>
-      {loadingAppointments ? (
-        <p>Cargando turnos...</p>
-      ) : (
-        <Table striped bordered hover>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Fecha</th>
-              <th>Hora</th>
-              <th>Estado</th>
-              <th>Usuario</th>
-              <th>Peluquero</th>
-            </tr>
-          </thead>
-          <tbody>
-            {appointments.map((appt) => (
-              <tr key={appt.appointment_id}>
-                <td>{appt.appointment_id}</td>
-                <td>{appt.appointment_date}</td>
-                <td>{appt.appointment_time}</td>
-                <td>{appt.status}</td>
-                <td>{appt.customer_name || appt.userId || appt.customer_id}</td>
-                <td>{appt.barber_name || appt.barberId || appt.barber_id}</td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      )}
-    </div>
+    </>
   );
 };
 
-export default ManageUsers;
+// --- Panel 2: Gestión de Turnos ---
+const AppointmentsPanel = () => {
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchAppointments = async () => {
+    try {
+      setLoading(true);
+      // const response = await api.get("/admin/appointments");
+      // setAppointments(response.data);
+      console.warn("Mockup de turnos. Endpoint no implementado.");
+      setAppointments([
+        {
+          appointmentId: 1,
+          date: "2025-11-10",
+          time: "10:00",
+          status: "Confirmado",
+          customerName: "Gero",
+          barberName: "Juan",
+        },
+      ]);
+    } catch (err) {
+      errorToast(err.response?.data?.message || "Error al obtener los turnos.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAppointments();
+  }, []);
+
+  if (loading) return <p>Cargando turnos...</p>;
+
+  return (
+    <>
+      <h3>Historial de Todos los Turnos</h3>
+      <Table striped bordered hover responsive>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Estado</th>
+            <th>Cliente</th>
+            <th>Barbero</th>
+          </tr>
+        </thead>
+        <tbody>
+          {appointments.map((appt) => (
+            <tr key={appt.appointmentId}>
+              <td>{appt.appointmentId}</td>
+              <td>{new Date(appt.date).toLocaleDateString()}</td>
+              <td>{appt.time}</td>
+              <td>{appt.status}</td>
+              <td>{appt.customerName}</td>
+              <td>{appt.barberName}</td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+    </>
+  );
+};
+
+// --- Panel 3: Gestión de Tratamientos ---
+const TreatmentsPanel = () => {
+  const [treatments, setTreatments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState(null);
+  const [newPrice, setNewPrice] = useState("");
+
+  const fetchTreatments = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/treatment");
+      setTreatments(response.data);
+    } catch (err) {
+      errorToast(
+        err.response?.data?.message || "Error al obtener tratamientos."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTreatments();
+  }, []);
+
+  const handleEditClick = (treatment) => {
+    setEditingId(treatment.treatmentId);
+    setNewPrice(treatment.price);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setNewPrice("");
+  };
+
+  const handleSavePrice = async (treatmentId) => {
+    const priceAsNumber = parseFloat(newPrice);
+
+    if (isNaN(priceAsNumber) || priceAsNumber <= 0) {
+      errorToast("Por favor, ingrese un precio válido.");
+      return;
+    }
+
+    try {
+      const bodyPayLoad = { newPrice: priceAsNumber };
+
+      await api.patch(`/treatment/${treatmentId}`, bodyPayLoad);
+
+      successToast("Precio actualizado.");
+      fetchTreatments();
+      handleCancelEdit();
+    } catch (err) {
+      console.error("Error al actualizar precio:", err);
+      if (err.response?.status === 400 && err.response.data?.errors) {
+        const validationErrors = Object.values(err.response.data.errors).flat();
+        errorToast(validationErrors[0] || "Error de validación.");
+      } else {
+        const message =
+          err.response?.data?.message || "Error al actualizar precio.";
+        errorToast(message);
+      }
+    }
+  };
+
+  if (loading) return <p>Cargando tratamientos...</p>;
+
+  return (
+    <>
+      <h3>Gestión de Tratamientos</h3>
+      <Table striped bordered hover responsive>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Precio</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {treatments.map((t) => (
+            <tr key={t.treatmentId}>
+              <td>{t.treatmentId}</td>
+              <td>{t.name}</td>
+              <td>
+                {editingId === t.treatmentId ? (
+                  <InputGroup>
+                    <InputGroup.Text>$</InputGroup.Text>
+                    <Form.Control
+                      type="number"
+                      value={newPrice}
+                      onChange={(e) => setNewPrice(e.target.value)}
+                    />
+                  </InputGroup>
+                ) : (
+                  `$ ${t.price}`
+                )}
+              </td>
+              <td>
+                {editingId === t.treatmentId ? (
+                  <>
+                    <Button
+                      variant="success"
+                      size="sm"
+                      onClick={() => handleSavePrice(t.treatmentId)}
+                    >
+                      Guardar
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="ms-2"
+                      onClick={handleCancelEdit}
+                    >
+                      Cancelar
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    onClick={() => handleEditClick(t)}
+                  >
+                    Editar Precio
+                  </Button>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>{" "}
+    </>
+  );
+};
+
+// --- COMPONENTE PRINCIPAL (Panel de Admin) ---
+const AdminPanel = () => {
+  const [activeView, setActiveView] = useState("users");
+
+  const renderView = () => {
+    switch (activeView) {
+      case "users":
+        return <UsersPanel />;
+      case "appointments":
+        return <AppointmentsPanel />;
+      case "treatments":
+        return <TreatmentsPanel />;
+      default:
+        return <UsersPanel />;
+    }
+  };
+
+  return (
+    <Container className="my-5">
+      <Row>
+        <Col>
+          <h2>Panel de Administración</h2>{" "}
+          <ButtonGroup className="mb-4">
+            <Button
+              variant={activeView === "users" ? "primary" : "outline-primary"}
+              onClick={() => setActiveView("users")}
+            >
+              Gestión de Usuarios
+            </Button>
+            <Button
+              variant={
+                activeView === "appointments" ? "primary" : "outline-primary"
+              }
+              onClick={() => setActiveView("appointments")}
+            >
+              Ver Todos los Turnos
+            </Button>
+            <Button
+              variant={
+                activeView === "treatments" ? "primary" : "outline-primary"
+              }
+              onClick={() => setActiveView("treatments")}
+            >
+              Gestión de Tratamientos
+            </Button>
+          </ButtonGroup>
+          {renderView()}
+        </Col>
+      </Row>
+    </Container>
+  );
+};
+export default AdminPanel;
