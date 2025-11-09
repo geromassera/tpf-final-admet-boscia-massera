@@ -162,19 +162,8 @@ const AppointmentsPanel = () => {
   const fetchAppointments = async () => {
     try {
       setLoading(true);
-      // const response = await api.get("/admin/appointments");
-      // setAppointments(response.data);
-      console.warn("Mockup de turnos. Endpoint no implementado.");
-      setAppointments([
-        {
-          appointmentId: 1,
-          date: "2025-11-10",
-          time: "10:00",
-          status: "Confirmado",
-          customerName: "Gero",
-          barberName: "Juan",
-        },
-      ]);
+      const response = await api.get("/appointment/history");
+      setAppointments(response.data);
     } catch (err) {
       errorToast(err.response?.data?.message || "Error al obtener los turnos.");
     } finally {
@@ -200,19 +189,34 @@ const AppointmentsPanel = () => {
             <th>Estado</th>
             <th>Cliente</th>
             <th>Barbero</th>
+            <th>Sucursal</th>
+            <th>Tratamiento</th>
+            <th>Precio</th>
           </tr>
         </thead>
         <tbody>
-          {appointments.map((appt) => (
-            <tr key={appt.appointmentId}>
-              <td>{appt.appointmentId}</td>
-              <td>{new Date(appt.date).toLocaleDateString()}</td>
-              <td>{appt.time}</td>
-              <td>{appt.status}</td>
-              <td>{appt.customerName}</td>
-              <td>{appt.barberName}</td>
-            </tr>
-          ))}
+          {appointments.map((appt) => {
+            const date = new Date(appt.appointmentDateTime);
+            const formattedDate = date.toLocaleDateString("es-AR");
+            const formattedTime = date.toLocaleTimeString("es-AR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+
+            return (
+              <tr key={appt.id}>
+                <td>{appt.id}</td>
+                <td>{formattedDate}</td>
+                <td>{formattedTime} hs.</td>
+                <td>{appt.status}</td>
+                <td>{appt.clientName}</td>
+                <td>{appt.barberName}</td>
+                <td>{appt.branchName}</td>
+                <td>{appt.treatmentName}</td>
+                <td>$ {appt.treatmentPrice}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </Table>
     </>

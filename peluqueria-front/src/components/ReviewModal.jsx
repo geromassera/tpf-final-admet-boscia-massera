@@ -1,32 +1,34 @@
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
-import { AuthenticationContext } from "./services/auth.context";
 import { toast } from "react-toastify";
 
 const ReviewModal = ({ show, handleClose, addReview }) => {
-  const { user } = useContext(AuthenticationContext);
   const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState("");
+  const [text, setText] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSubmit = () => {
-    const trimmedComment = comment.trim();
+  const handleSubmit = async () => {
+    const trimmedText = text.trim();
 
-    if (!trimmedComment) {
-      toast.error("La reseña no puede estar vacía ni contener solo espacios.");
+    if (!trimmedText) {
+      toast.error("La reseña no puede estar vacía.");
       return;
     }
 
-    addReview({
-      user: user.name,
+    setIsSaving(true);
+
+    const success = await addReview({
       rating,
-      comment: trimmedComment,
+      text: trimmedText,
     });
 
-    toast.success("Reseña guardada con éxito");
+    setIsSaving(false);
 
-    setRating(5);
-    setComment("");
-    handleClose();
+    if (success) {
+      setRating(5);
+      setText("");
+      handleClose();
+    }
   };
 
   return (
@@ -55,24 +57,24 @@ const ReviewModal = ({ show, handleClose, addReview }) => {
             <Form.Control
               as="textarea"
               rows={3}
-              maxLength={255}
+              maxLength={1000}
               style={{ resize: "none" }}
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
               placeholder="Escribe tu opinión aquí..."
             />
             <Form.Text muted>
-              Máximo 255 caracteres. Restantes: {255 - comment.length}
+              Máximo 1000 caracteres. Restantes: {1000 - text.length}
             </Form.Text>
           </Form.Group>
         </Form>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={handleClose}>
+        <Button variant="secondary" onClick={handleClose} disabled={isSaving}>
           Cancelar
         </Button>
-        <Button variant="primary" onClick={handleSubmit}>
-          Guardar
+        <Button variant="primary" onClick={handleSubmit} disabled={isSaving}>
+          {isSaving ? "Guardando..." : "Guardar"}
         </Button>
       </Modal.Footer>
     </Modal>
