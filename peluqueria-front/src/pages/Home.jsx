@@ -7,16 +7,17 @@ const Home = () => {
   const navigate = useNavigate();
   const { isLoggedIn, user } = useContext(AuthenticationContext);
 
+
   const renderBotonPorRol = () => {
     if (!user) return null;
 
     switch (user.role) {
-      case "Customer":
+      case "Client": 
         return (
           <Button
-            variant="success"
+            variant="primary"
             size="lg"
-            onClick={() => navigate("/appointments")}
+            onClick={() => navigate("/branches")}
           >
             Sacar turno
           </Button>
@@ -47,7 +48,7 @@ const Home = () => {
   };
 
   return (
-    <Container className="mt-5">
+    <Container className="mt-5">     
       <div className="bg-light p-5 rounded-lg m-3 text-center shadow">
         {!isLoggedIn ? (
           <>

@@ -5,57 +5,35 @@ import {
   errorToast,
 } from "../components/ui/toast/NotificationToast";
 import { AuthenticationContext } from "../components/services/auth.context";
+import api from "../components/services/API/Axios";
 
 const BarberView = () => {
   const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
   const { user } = useContext(AuthenticationContext);
 
   const fetchAppointments = async () => {
+    setLoading(true);
     try {
-      const res = await fetch("http://localhost:3000/appointments");
-      if (!res.ok) throw new Error("Error al obtener turnos");
-      const data = await res.json();
-      setAppointments(data);
+      const response = await api.get("/appointments/barber/schedule");
+      
+      setAppointments(response.data); 
+      
     } catch (err) {
-      errorToast(err.message);
-    }
-  };
-
-  const handleTakeAppointment = async (appointmentId) => {
-    console.log("Usuario logueado:", user);
-    try {
-      const res = await fetch(
-        `http://localhost:3000/appointments/${appointmentId}/assign`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ barber_id: user.user_id }),
-        }
-      );
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || "Error al tomar el turno");
-      }
-      successToast("Turno asignado correctamente");
-      fetchAppointments();
-    } catch (err) {
-      errorToast(err.message);
+      errorToast(err.response?.data?.message || "Error al obtener turnos.");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleCancelAppointment = async (appointmentId) => {
     try {
-      const res = await fetch(
-        `http://localhost:3000/appointments/${appointmentId}/cancel`,
-        {
-          method: "PUT",
-        }
-      );
-      if (!res.ok) throw new Error("Error al cancelar el turno");
-      successToast("Turno cancelado correctamente");
+      await api.put(`/appointments/${appointmentId}/cancel`);
+      
+      successToast("Turno cancelado correctamente.");
       fetchAppointments();
     } catch (err) {
-      errorToast(err.message);
+      errorToast(err.response?.data?.message || "Error al cancelar el turno.");
     }
   };
 
@@ -63,82 +41,44 @@ const BarberView = () => {
     fetchAppointments();
   }, []);
 
-  const availableAppointments = appointments.filter(
-    (appt) => appt.barber_id === null && appt.status === "Pendiente"
-  );
+  const assignedAppointments = appointments;
 
-  const assignedAppointments = appointments.filter(
-    (appt) => appt.barber_id === user.user_id && appt.status === "Asignado"
-  );
+  if (loading) {
+    return (
+      <div className="container mt-5 text-center">
+        <p>Cargando tu agenda...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="container mt-5">
-      <h3>Turnos disponibles</h3>
-      {availableAppointments.length === 0 ? (
-        <p>No hay turnos disponibles</p>
-      ) : (
-        <Table striped bordered hover>
-          <thead>
-            <tr>
-              <th>Cliente</th>
-              <th>Servicio</th>
-              <th>Fecha</th>
-              <th>Hora</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {availableAppointments.map((appt) => (
-              <tr key={appt.appointment_id}>
-                <td>{appt.customer_name}</td>
-                <td>{appt.service}</td>
-                <td>{appt.appointment_date}</td>
-                <td>{appt.appointment_time}</td>
-                <td>{appt.status}</td>
-                <td>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => handleTakeAppointment(appt.appointment_id)}
-                  >
-                    Tomar turno
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      )}
-
-      <h3 className="mt-5">Mis turnos asignados</h3>
+      <h3>Mi Agenda de Turnos</h3>
       {assignedAppointments.length === 0 ? (
-        <p>Sin turnos asignados</p>
+        <p>Sin turnos asignados o confirmados en tu agenda.</p>
       ) : (
         <Table striped bordered hover>
           <thead>
             <tr>
               <th>Cliente</th>
               <th>Servicio</th>
-              <th>Fecha</th>
-              <th>Hora</th>
+              <th>Fecha y Hora</th>
               <th>Estado</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {assignedAppointments.map((appt) => (
-              <tr key={appt.appointment_id}>
-                <td>{appt.customer_name}</td>
-                <td>{appt.service}</td>
-                <td>{appt.appointment_date}</td>
-                <td>{appt.appointment_time}</td>
+              <tr key={appt.id}> 
+                <td>{appt.clientName}</td>
+                <td>{appt.treatmentName}</td>
+                <td>{new Date(appt.appointmentDateTime).toLocaleString()}</td> 
                 <td>{appt.status}</td>
                 <td>
                   <Button
                     variant="danger"
                     size="sm"
-                    onClick={() => handleCancelAppointment(appt.appointment_id)}
+                    onClick={() => handleCancelAppointment(appt.id)}
                   >
                     Cancelar turno
                   </Button>

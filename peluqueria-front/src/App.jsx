@@ -19,6 +19,7 @@ import NotFound from "./pages/NotFound";
 import About from "./pages/About";
 import Reviews from "./pages/Reviews";
 import BarberRoute from "./components/routes/BarberRoute";
+import BranchesView from "./pages/BranchesView";
 
 function App() {
   return (
@@ -58,6 +59,15 @@ function App() {
                 </BarberRoute>
               }
             />
+            <Route
+              path="/branches"
+              element={
+                <LoggedRoute>
+                  <BranchesView />
+                </LoggedRoute>
+              }
+            />
+
             <Route path="/reviews" element={<Reviews />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
