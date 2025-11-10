@@ -81,69 +81,73 @@ const UsersPanel = () => {
         />
       </Form.Group>
 
-      <Table striped bordered hover responsive>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Nombre</th>
-            <th>Apellido</th>
-            <th>Email</th>
-            <th>Rol</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredUsers.map((user) => (
-            <tr key={user.userId}>
-              <td>{user.userId}</td>
-              <td>{user.name}</td>
-              <td>{user.surname}</td>
-              <td>{user.email}</td>
-              <td>{user.role}</td>
-              <td>
-                {user.role === "Admin" ? (
-                  <span className="text-muted fst-italic">
-                    No se puede modificar
-                  </span>
-                ) : (
-                  <>
-                    <Button
-                      variant="success"
-                      size="sm"
-                      onClick={() => handleChangeRole(user.userId, "Barber")}
-                      disabled={user.role === "Barber"}
-                    >
-                      Hacer Barbero
-                    </Button>
-
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      className="ms-2"
-                      onClick={() => handleChangeRole(user.userId, "Client")}
-                      disabled={user.role === "Client"}
-                    >
-                      Hacer Cliente
-                    </Button>
-
-                    <Button
-                      variant="warning"
-                      size="sm"
-                      className="ms-2"
-                      onClick={() => {
-                        setSelectedUserId(user.userId);
-                        setShowAdminModal(true);
-                      }}
-                    >
-                      Hacer Admin
-                    </Button>
-                  </>
-                )}
-              </td>
+      {filteredUsers.length === 0 ? (
+        <p>No se encontraron usuarios con ese apellido.</p>
+      ) : (
+        <Table striped bordered hover responsive>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Apellido</th>
+              <th>Email</th>
+              <th>Rol</th>
+              <th>Acciones</th>
             </tr>
-          ))}
-        </tbody>
-      </Table>
+          </thead>
+          <tbody>
+            {filteredUsers.map((user) => (
+              <tr key={user.userId}>
+                <td>{user.userId}</td>
+                <td>{user.name}</td>
+                <td>{user.surname}</td>
+                <td>{user.email}</td>
+                <td>{user.role}</td>
+                <td>
+                  {user.role === "Admin" ? (
+                    <span className="text-muted fst-italic">
+                      No se puede modificar
+                    </span>
+                  ) : (
+                    <>
+                      <Button
+                        variant="success"
+                        size="sm"
+                        onClick={() => handleChangeRole(user.userId, "Barber")}
+                        disabled={user.role === "Barber"}
+                      >
+                        Hacer Barbero
+                      </Button>
+
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        className="ms-2"
+                        onClick={() => handleChangeRole(user.userId, "Client")}
+                        disabled={user.role === "Client"}
+                      >
+                        Hacer Cliente
+                      </Button>
+
+                      <Button
+                        variant="warning"
+                        size="sm"
+                        className="ms-2"
+                        onClick={() => {
+                          setSelectedUserId(user.userId);
+                          setShowAdminModal(true);
+                        }}
+                      >
+                        Hacer Admin
+                      </Button>
+                    </>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      )}
 
       <ConfirmAdminModal
         show={showAdminModal}
@@ -162,7 +166,7 @@ const AppointmentsPanel = () => {
   const fetchAppointments = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/appointment/history");
+      const response = await api.get("/appointments/history");
       setAppointments(response.data);
     } catch (err) {
       errorToast(err.response?.data?.message || "Error al obtener los turnos.");
@@ -180,45 +184,49 @@ const AppointmentsPanel = () => {
   return (
     <>
       <h3>Historial de Todos los Turnos</h3>
-      <Table striped bordered hover responsive>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Fecha</th>
-            <th>Hora</th>
-            <th>Estado</th>
-            <th>Cliente</th>
-            <th>Barbero</th>
-            <th>Sucursal</th>
-            <th>Tratamiento</th>
-            <th>Precio</th>
-          </tr>
-        </thead>
-        <tbody>
-          {appointments.map((appt) => {
-            const date = new Date(appt.appointmentDateTime);
-            const formattedDate = date.toLocaleDateString("es-AR");
-            const formattedTime = date.toLocaleTimeString("es-AR", {
-              hour: "2-digit",
-              minute: "2-digit",
-            });
+      {appointments.length === 0 ? (
+        <p>No hay turnos registrados.</p>
+      ) : (
+        <Table striped bordered hover responsive>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Fecha</th>
+              <th>Hora</th>
+              <th>Estado</th>
+              <th>Cliente</th>
+              <th>Barbero</th>
+              <th>Sucursal</th>
+              <th>Tratamiento</th>
+              <th>Precio</th>
+            </tr>
+          </thead>
+          <tbody>
+            {appointments.map((appt) => {
+              const date = new Date(appt.appointmentDateTime);
+              const formattedDate = date.toLocaleDateString("es-AR");
+              const formattedTime = date.toLocaleTimeString("es-AR", {
+                hour: "2-digit",
+                minute: "2-digit",
+              });
 
-            return (
-              <tr key={appt.id}>
-                <td>{appt.id}</td>
-                <td>{formattedDate}</td>
-                <td>{formattedTime} hs.</td>
-                <td>{appt.status}</td>
-                <td>{appt.clientName}</td>
-                <td>{appt.barberName}</td>
-                <td>{appt.branchName}</td>
-                <td>{appt.treatmentName}</td>
-                <td>$ {appt.treatmentPrice}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </Table>
+              return (
+                <tr key={appt.id}>
+                  <td>{appt.id}</td>
+                  <td>{formattedDate}</td>
+                  <td>{formattedTime} hs.</td>
+                  <td>{appt.status}</td>
+                  <td>{appt.clientName}</td>
+                  <td>{appt.barberName}</td>
+                  <td>{appt.branchName}</td>
+                  <td>{appt.treatmentName}</td>
+                  <td>$ {appt.treatmentPrice}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </Table>
+      )}
     </>
   );
 };

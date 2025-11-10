@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from "react";
 import { Container, Row, Col, Card, Button } from "react-bootstrap";
-import { reviewModal } from "../components/ReviewModal";
+import ReviewModal from "../components/ReviewModal";
 import { AuthenticationContext } from "../components/services/auth.context";
 import api from "../components/services/API/Axios";
 import {

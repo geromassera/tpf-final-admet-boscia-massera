@@ -1,4 +1,3 @@
-// src/components/ConfirmDeleteModal.jsx
 import { Modal, Button } from "react-bootstrap";
 
 const ConfirmDeleteModal = ({ show, handleClose, handleConfirm }) => {
