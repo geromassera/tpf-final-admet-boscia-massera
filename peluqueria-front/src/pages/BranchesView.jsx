@@ -3,38 +3,44 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Container, Row, Col, Card, Button } from "react-bootstrap";
-import api from "../components/services/API/Axios"; 
-import { errorToast } from "../components/ui/toast/NotificationToast"; 
 
 const BranchesView = () => {
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const fetchBranches = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get("/branch"); 
-      
-      setBranches(response.data);
-      
-    } catch (err) {
-      console.error("Error fetching branches:", err);
-      errorToast(err.response?.data?.message || "Error al cargar las sucursales.");
-      setBranches([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  const HARDCODED_BRANCHES = [
+    {
+      branchId: 1, 
+      name: "Sucursal Centro",
+      address: "Av. Pellegrini 1234",
+      image: "./local-placeholder.png", 
+    },
+    {
+      branchId: 2, 
+      name: "Sucursal Norte",
+      address: "Bv. Rondeau 4567",
+      image: "./local-placeholder-2.png", 
+    },
+    {
+      branchId: 3,
+      name: "Sucursal Sur",
+      address: "Boulevard 789",
+      image: "./local-placeholder-2.png", 
+    },
+  ];
 
   useEffect(() => {
-    fetchBranches();
+    setLoading(true);
+    setTimeout(() => {
+      setBranches(HARDCODED_BRANCHES);
+      setLoading(false);
+    }, 300);
   }, []);
 
   const handleSelectBranch = (branch) => {
     localStorage.setItem("selectedBranch", JSON.stringify(branch));
-    navigate("/appointments");
+    navigate("/appointments"); 
   };
 
   if (loading) {
@@ -67,7 +73,7 @@ const BranchesView = () => {
             <Card className="h-100 shadow-sm">
               <Card.Img
                 variant="top"
-                src={branch.branchId === 1 ? "./local-placeholder.png" : "./local-placeholder-2.png"}
+                src={branch.image} 
                 alt={branch.name}
                 style={{ height: "220px", objectFit: "cover" }}
               />
@@ -75,7 +81,6 @@ const BranchesView = () => {
                 <Card.Title>{branch.name}</Card.Title>
                 <Card.Text>
                   <strong>Dirección:</strong> {branch.address}
-                  <br />
                 </Card.Text>
                 <Button
                   variant="primary"
