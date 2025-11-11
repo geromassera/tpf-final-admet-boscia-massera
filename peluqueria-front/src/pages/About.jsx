@@ -168,40 +168,38 @@ const AboutUs = () => {
           </Card>
         </Col>
 
-        {/* Servicios y diferenciadores */}
-        <Col md={12} lg={8} className="mx-auto">
+        {/* Por qué elegirnos */}
+        <Col md={12} lg={8} className="mx-auto mt-4">
           <Card className="shadow-sm p-3">
             <Card.Body>
-              <Row>
-                <Col md={6}>
-                  <Card.Text>
-                    <strong>Servicios:</strong>
-                    <br />
-                    💇Cortes de cabello (hombre, mujer y niños)
-                    <br />
-                    🎨Coloración y mechas
-                    <br />
-                    💃Peinados y styling para eventos
-                    <br />
-                    💆Tratamientos capilares (hidratación y reparación)
-                  </Card.Text>
-                </Col>
-
-                <Col md={6}>
-                  <Card.Text>
-                    <strong>Diferenciadores:</strong>
-                    <br />
-                    - Atención personalizada con asesoramiento de imagen.
-                    <br />
-                    - Técnicas actualizadas y formación continua del equipo.
-                    <br />
-                    - Productos profesionales seleccionados para cada tipo de
-                    cabello.
-                    <br />- Ambiente cómodo y ameno pensado para la experiencia
-                    del cliente.
-                  </Card.Text>
-                </Col>
-              </Row>
+              <Card.Title>
+                <strong>¿Por qué elegirnos?</strong>
+              </Card.Title>
+              <Card.Text>
+                En nuestra peluquería, nos esforzamos por ofrecer una
+                experiencia superior en cada visita. Nuestros principales
+                diferenciadores son:
+                <br />
+                <ul>
+                  <li>
+                    Atención personalizada con asesoramiento de imagen
+                    profesional.
+                  </li>
+                  <li>
+                    Técnicas de vanguardia y un equipo en formación continua.
+                  </li>
+                  <li>
+                    Uso exclusivo de productos profesionales de alta calidad.
+                  </li>
+                  <li>
+                    Un ambiente cálido y relajante, diseñado para tu confort.
+                  </li>
+                  <li>
+                    Compromiso con la sostenibilidad, utilizando productos con
+                    menor impacto ambiental.
+                  </li>
+                </ul>
+              </Card.Text>
             </Card.Body>
           </Card>
         </Col>

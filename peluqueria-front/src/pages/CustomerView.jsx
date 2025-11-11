@@ -5,20 +5,20 @@ import {
   errorToast,
 } from "../components/ui/toast/NotificationToast";
 import { AuthenticationContext } from "../components/services/auth.context";
-import api from "../components/services/API/Axios"; 
+import api from "../components/services/API/Axios";
 
 const CostumerView = () => {
   const [turnos, setTurnos] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user } = useContext(AuthenticationContext);
-  
-  const [selectedBranch, setSelectedBranch] = useState(null); 
-  
+
+  const [selectedBranch, setSelectedBranch] = useState(null);
+
   const [form, setForm] = useState({
     service: "",
     appointment_date: "",
     appointment_time: "",
-    barber_id: "any"
+    barber_id: "any",
   });
 
   const today = new Date();
@@ -84,18 +84,17 @@ const CostumerView = () => {
       errorToast("No se pudo identificar al cliente.");
       return;
     }
-    
+
     if (!selectedBranch) {
       errorToast("Debe seleccionar una sucursal para reservar.");
       return;
     }
-    
 
     const appointmentData = {
-        treatmentId: parseInt(fodrm.service, 10), 
-        barberId: parseInt(form.barber_id, 10), 
-        branchId: selectedBranch.branchId, 
-        appointmentDateTime: `${form.appointment_date}T${form.appointment_time}:00`, 
+      treatmentId: parseInt(form.service, 10),
+      barberId: parseInt(form.barber_id, 10),
+      branchId: selectedBranch.branchId,
+      appointmentDateTime: `${form.appointment_date}T${form.appointment_time}:00`,
     };
 
     try {
@@ -106,7 +105,7 @@ const CostumerView = () => {
         service: "",
         appointment_date: "",
         appointment_time: "",
-        barber_id: "any"
+        barber_id: "any",
       });
       fetchTurnosCliente();
     } catch (err) {
@@ -136,81 +135,86 @@ const CostumerView = () => {
   const turnosVisibles = turnos.filter(
     (turno) => turno.status !== "Cancelado" && turno.status !== "Completed"
   );
-  
-  const displayBranch = selectedBranch ? `(${selectedBranch.name})` : '';
+
+  const displayBranch = selectedBranch ? `(${selectedBranch.name})` : "";
 
   return (
     <Container className="mt-5">
       <Card className="p-4 shadow mb-4">
         <Card.Body>
           <h4 className="mb-3">Reservar nuevo turno {displayBranch}</h4>
-            <Form onSubmit={handleSubmit}>
-              <Row className="g-3 align-items-end">
-                <Col md={3}>
-                  <Form.Select
-                    name="service"
-                    value={form.service}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="">Selecciona un servicio</option>
-                    <option value="1">Corte</option>
-                    <option value="2">Corte y barba</option>
-                    <option value="3">Peinado</option>
-                    <option value="4">Coloración</option>
-                    <option value="5">Barba</option>
-                  </Form.Select>
-                </Col>
+          <Form onSubmit={handleSubmit}>
+            <Row className="g-3 align-items-end">
+              <Col md={3}>
+                <Form.Select
+                  name="service"
+                  value={form.service}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Selecciona un servicio</option>
+                  <option value="1">Corte</option>
+                  <option value="2">Corte y barba</option>
+                  <option value="3">Peinado</option>
+                  <option value="4">Coloración</option>
+                  <option value="5">Barba</option>
+                </Form.Select>
+              </Col>
 
-                <Col md={2}>
-                  <Form.Control
-                    type="date"
-                    name="appointment_date"
-                    value={form.appointment_date}
-                    onChange={handleChange}
-                    min={minDate}
-                    max={maxDate}
-                    required
-                  />
-                </Col>
+              <Col md={2}>
+                <Form.Control
+                  type="date"
+                  name="appointment_date"
+                  value={form.appointment_date}
+                  onChange={handleChange}
+                  min={minDate}
+                  max={maxDate}
+                  required
+                />
+              </Col>
 
-                <Col md={2}>
-                  <Form.Select
-                    name="appointment_time"
-                    value={form.appointment_time}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="">Seleccionar hora</option>
-                    {generarOpcionesHora().map((hora, idx) => (
-                      <option key={idx} value={hora}>
-                        {hora}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Col>
+              <Col md={2}>
+                <Form.Select
+                  name="appointment_time"
+                  value={form.appointment_time}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Seleccionar hora</option>
+                  {generarOpcionesHora().map((hora, idx) => (
+                    <option key={idx} value={hora}>
+                      {hora}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Col>
 
-                <Col md={3}>
-                  <Form.Select
-                    name="barber_id"
-                    value={form.barber_id}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="any">Barbero </option>
-                    <option value="Martin">Martin</option>
-                    <option value= "Laura">Laura</option>
-                    <option value="Julián">Julián</option>
-                  </Form.Select>
-                </Col>
+              <Col md={3}>
+                <Form.Select
+                  name="barber_id"
+                  value={form.barber_id}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="any">Barbero </option>
+                  <option value="Martin">Martin</option>
+                  <option value="Laura">Laura</option>
+                  <option value="Julián">Julián</option>
+                </Form.Select>
+              </Col>
 
-                <Col md={2}>
-                  <Button type="submit" variant="primary" className="w-100" disabled={!selectedBranch}>
-                    Reservar
-                  </Button>
-                </Col>
-              </Row>
-            </Form>
+              <Col md={2}>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  className="w-100"
+                  disabled={!selectedBranch}
+                >
+                  Reservar
+                </Button>
+              </Col>
+            </Row>
+          </Form>
         </Card.Body>
       </Card>
 
@@ -226,10 +230,11 @@ const CostumerView = () => {
                   <Card className="h-100 shadow-sm">
                     <Card.Body>
                       <Card.Title className="mb-3">
-                        Servicio: {turno.treatmentName} 
+                        Servicio: {turno.treatmentName}
                       </Card.Title>
                       <Card.Text>
-                        <strong>Fecha y Hora:</strong> {new Date(turno.appointmentDateTime).toLocaleString()}
+                        <strong>Fecha y Hora:</strong>{" "}
+                        {new Date(turno.appointmentDateTime).toLocaleString()}
                         <br />
                         <strong>Barbero:</strong> {turno.barberName}
                         <br />
@@ -281,7 +286,7 @@ function isClosedDay(dateStr) {
 
 function isValidHour(timeStr) {
   const [hora, minutos] = timeStr.split(":").map(Number);
-  return hora >= 10 && (hora < 19 || (hora === 19 && minutos === 0)); 
+  return hora >= 10 && (hora < 19 || (hora === 19 && minutos === 0));
 }
 
 export default CostumerView;
