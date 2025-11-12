@@ -31,11 +31,6 @@ const WorkWithUs = () => {
             </div>
 
             <div className="mb-3">
-              <label className="form-label">Mensaje</label>
-              <textarea className="form-control" rows="4" placeholder="Algo que quieras contarnos..."></textarea>
-            </div>
-
-            <div className="mb-3">
               <label className="form-label">Adjuntar CV</label>
               <input type="file" className="form-control" />
             </div>
