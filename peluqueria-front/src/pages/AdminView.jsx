@@ -397,7 +397,7 @@ const BarberAssignmentsPanel = () => {
       setLoading(true);
       const [usersResponse, branchesResponse] = await Promise.all([
         api.get("/admin/users"),
-        api.get("/branches"),
+        api.get("/branch"), 
       ]);
       setUsers(usersResponse.data);
       setBranches(branchesResponse.data);
@@ -488,6 +488,116 @@ const BarberAssignmentsPanel = () => {
   );
 };
 
+const CurriculumsPanel = () => {
+  const [curriculums, setCurriculums] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchCurriculums = async () => {
+    try {
+      setLoading(true);
+      // Endpoint para obtener la lista de postulaciones
+      const response = await api.get("/admin/curriculums"); 
+      setCurriculums(response.data);
+    } catch (err) {
+      errorToast(
+        err.response?.data?.message || "Error al obtener los currículums."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCurriculums();
+  }, []);
+
+  const handleDownload = async (curriculumId, originalFileName) => {
+    try {
+      // Endpoint seguro para descargar y marcar como visto
+      const response = await api.get(
+        `/admin/curriculum/${curriculumId}/download`,
+        {
+          responseType: "blob", // Importante para manejar archivos binarios
+        }
+      );
+
+      // Crea un objeto URL para el blob
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      // Utiliza el nombre original del archivo
+      link.setAttribute("download", originalFileName); 
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      successToast("CV descargado. Marcado como visto.");
+      
+      // Actualiza la lista para reflejar el estado "Visto"
+      fetchCurriculums(); 
+    } catch (err) {
+      errorToast("Error al descargar el CV.");
+    }
+  };
+
+  if (loading) return <p>Cargando postulaciones...</p>;
+
+  return (
+    <>
+      <h3>Gestión de Curriculums</h3>
+      {curriculums.length === 0 ? (
+        <p>No hay postulaciones de CV registradas.</p>
+      ) : (
+        <Table striped bordered hover responsive>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre Completo</th>
+              <th>Email</th>
+              <th>Fecha</th>
+              <th>Archivo</th>
+              <th>Visto</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {curriculums.map((cv) => (
+              <tr key={cv.id}>
+                <td>{cv.id}</td>
+                <td>
+                  {cv.name} {cv.surname}
+                </td>
+                <td>{cv.email}</td>
+                <td>{new Date(cv.uploadDate).toLocaleDateString()}</td>
+                <td>{cv.fileName}</td>
+                <td>
+                  <span
+                    className={`badge ${
+                      cv.isReviewed ? "bg-success" : "bg-warning text-dark"
+                    }`}
+                  >
+                    {cv.isReviewed ? "Sí" : "No"}
+                  </span>
+                </td>
+                <td>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => handleDownload(cv.id, cv.fileName)}
+                  >
+                    Descargar
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      )}
+    </>
+  );
+};
+
 // --- COMPONENTE PRINCIPAL (Panel de Admin) ---
 const AdminPanel = () => {
   const [activeView, setActiveView] = useState("users");
@@ -504,6 +614,8 @@ const AdminPanel = () => {
         return <TreatmentsPanel />;
       case "assignments":
         return <BarberAssignmentsPanel />;
+      case "curriculums": // <-- NUEVO CASE
+        return <CurriculumsPanel />;
       default:
         return (
           <UsersPanel onUserMadeBarber={() => setActiveView("assignments")} />
@@ -546,6 +658,15 @@ const AdminPanel = () => {
               onClick={() => setActiveView("treatments")}
             >
               Gestión de Tratamientos
+            </Button>
+            {/* <-- NUEVO BOTÓN --> */}
+            <Button
+              variant={
+                activeView === "curriculums" ? "primary" : "outline-primary"
+              }
+              onClick={() => setActiveView("curriculums")}
+            >
+              Gestión de Curriculums
             </Button>
           </ButtonGroup>
           {renderView()}

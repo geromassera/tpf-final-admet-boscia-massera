@@ -71,11 +71,7 @@ function App() {
 
             <Route
               path="/workWithUs"
-              element={
-                <LoggedRoute>
-                  <WorkWithUs />
-                </LoggedRoute>
-              }
+              element={<WorkWithUs />}
             />
 
             <Route path="/reviews" element={<Reviews />} />

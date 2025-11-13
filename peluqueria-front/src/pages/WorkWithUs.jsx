@@ -1,4 +1,138 @@
+import { useState } from "react";
+import api from "../components/services/API/Axios";
+import {
+  successToast,
+  errorToast,
+} from "../components/ui/toast/NotificationToast";
+import { Form, Button, Row, Col } from "react-bootstrap"; // Importamos Form y Button
+
 const WorkWithUs = () => {
+  const [formData, setFormData] = useState({
+    name: "",
+    surname: "",
+    email: "",
+    phone: "",
+    cvFile: null,
+  });
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value, files } = e.target;
+
+    if (name === "cvFile") {
+      setFormData({ ...formData, [name]: files[0] });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
+  };
+
+  const validate = () => {
+    const newErrors = {};
+    let isValid = true;
+
+    // Validación: Nombre (Máx 50)
+    if (!formData.name) {
+      newErrors.name = "El nombre es obligatorio.";
+      isValid = false;
+    } else if (formData.name.length > 50) {
+      newErrors.name = "Máximo 50 caracteres.";
+      isValid = false;
+    }
+
+    // Validación: Apellido (Máx 50)
+    if (!formData.surname) {
+      newErrors.surname = "El apellido es obligatorio.";
+      isValid = false;
+    } else if (formData.surname.length > 50) {
+      newErrors.surname = "Máximo 50 caracteres.";
+      isValid = false;
+    }
+
+    // Validación: Email (Máx 60, formato)
+    if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Ingrese un email válido.";
+      isValid = false;
+    } else if (formData.email.length > 60) {
+      newErrors.email = "Máximo 60 caracteres.";
+      isValid = false;
+    }
+
+    // Validación: Teléfono (10-20 dígitos)
+    const phoneRegex = /^\d{10,20}$/;
+    const cleanNumber = formData.phone.replace(/[\s-()+\.]/g, "");
+    if (!cleanNumber || !phoneRegex.test(cleanNumber)) {
+      newErrors.phone = "Teléfono inválido (mín. 10 y máx. 20 dígitos).";
+      isValid = false;
+    }
+
+    // Validación: CV (PDF, Máx 5MB)
+    if (!formData.cvFile) {
+      newErrors.cvFile = "Debe adjuntar su CV.";
+      isValid = false;
+    } else if (formData.cvFile.type !== "application/pdf") {
+      newErrors.cvFile = "Solo se permiten archivos PDF.";
+      isValid = false;
+    } else if (formData.cvFile.size > 5 * 1024 * 1024) {
+      // 5MB limit
+      newErrors.cvFile = "El archivo debe ser menor a 5MB.";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validate()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    // 1. Crear FormData para enviar el archivo
+    const data = new FormData();
+    data.append("Name", formData.name);
+    data.append("Surname", formData.surname);
+    data.append("Email", formData.email);
+    // Elimina caracteres no deseados antes de enviar el teléfono
+    data.append("Phone", formData.phone.replace(/[\s-()+\.]/g, "")); 
+    data.append("CvFile", formData.cvFile); // Archivo binario
+
+    try {
+      // 2. Enviar a la API: /api/curriculum.
+      // Se usa un header 'Content-Type': undefined para que Axios/Browser
+      // genere el header 'multipart/form-data' con el boundary correcto.
+      await api.post("/curriculum", data, {
+        headers: {
+          "Content-Type": undefined,
+        },
+      });
+
+      successToast("¡Postulación enviada con éxito! Nos contactaremos pronto.");
+
+      // Resetear el formulario
+      setFormData({
+        name: "",
+        surname: "",
+        email: "",
+        phone: "",
+        cvFile: null,
+      });
+      setErrors({});
+      // Es posible que necesites resetear el input[type="file"] manualmente en React.
+      e.target.reset(); 
+    } catch (err) {
+      const message =
+        err.response?.data?.message || "Error al enviar la postulación.";
+      errorToast(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="container my-5">
       <div className="row justify-content-center">
@@ -9,43 +143,83 @@ const WorkWithUs = () => {
             <br /> Completá el formulario y envianos tu CV.
           </p>
 
-          <form>
+          <Form onSubmit={handleSubmit}>
             <div className="mb-3">
-              <label className="form-label">Nombre completo</label>
-              <input type="text" className="form-control" placeholder="Tu nombre" />
+              <label className="form-label">Nombre</label>
+              <input
+                type="text"
+                name="name"
+                className={`form-control ${errors.name ? "is-invalid" : ""}`}
+                placeholder="Tu nombre"
+                value={formData.name}
+                onChange={handleChange}
+              />
+              {errors.name && <div className="invalid-feedback">{errors.name}</div>}
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Apellido</label>
+              <input
+                type="text"
+                name="surname"
+                className={`form-control ${errors.surname ? "is-invalid" : ""}`}
+                placeholder="Tu apellido"
+                value={formData.surname}
+                onChange={handleChange}
+              />
+              {errors.surname && <div className="invalid-feedback">{errors.surname}</div>}
             </div>
 
             <div className="mb-3">
               <label className="form-label">Email</label>
-              <input type="email" className="form-control" placeholder="tucorreo@mail.com" />
+              <input
+                type="email"
+                name="email"
+                className={`form-control ${errors.email ? "is-invalid" : ""}`}
+                placeholder="tucorreo@mail.com"
+                value={formData.email}
+                onChange={handleChange}
+              />
+              {errors.email && <div className="invalid-feedback">{errors.email}</div>}
             </div>
 
             <div className="mb-3">
-              <label className="form-label">Puesto al que aplicás</label>
-              <select className="form-select">
-                <option value="">Selecciona un puesto</option>
-                <option value="peluquero">Peluquero/a</option>
-                <option value="colorista">Colorista</option>
-                <option value="recepcion">Recepcionista</option>
-              </select>
+              <label className="form-label">Teléfono</label>
+              <input
+                type="tel"
+                name="phone"
+                className={`form-control ${errors.phone ? "is-invalid" : ""}`}
+                placeholder="Ej: 3411234567"
+                value={formData.phone}
+                onChange={handleChange}
+              />
+              {errors.phone && <div className="invalid-feedback">{errors.phone}</div>}
             </div>
 
             <div className="mb-3">
-              <label className="form-label">Adjuntar CV</label>
-              <input type="file" className="form-control" />
+              <label className="form-label">
+                Adjuntar CV (Máx 5MB, solo PDF)
+              </label>
+              <input
+                type="file"
+                name="cvFile"
+                className={`form-control ${errors.cvFile ? "is-invalid" : ""}`}
+                accept=".pdf" // Sugerencia de archivo PDF en el diálogo
+                onChange={handleChange}
+              />
+              {errors.cvFile && <div className="invalid-feedback">{errors.cvFile}</div>}
             </div>
 
             <div className="text-center">
-              <button type="submit" className="btn btn-dark">
-                Enviar solicitud
-              </button>
+              <Button type="submit" variant="dark" disabled={isSubmitting}>
+                {isSubmitting ? "Enviando..." : "Enviar solicitud"}
+              </Button>
             </div>
-          </form>
+          </Form>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default WorkWithUs
+export default WorkWithUs;
 
