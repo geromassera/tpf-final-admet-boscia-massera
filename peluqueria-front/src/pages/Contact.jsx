@@ -12,8 +12,8 @@ const Contact = () => {
                 <strong>📍 Locales:</strong>
               </Card.Text>
               <ul>
-                <li>Av. Francia 1375, Rosario, Santa Fé</li>
-                <li>Av. Pellegrini 2500, Rosario, Santa Fé</li>
+                <li>Bv. Rondeau 4567, Rosario, Santa Fé</li>
+                <li>Av. Pellegrini 1234, Rosario, Santa Fé</li>
               </ul>
               <Card.Text>
                 <strong>📞 Teléfono:</strong> +54 9 341 392 1175
