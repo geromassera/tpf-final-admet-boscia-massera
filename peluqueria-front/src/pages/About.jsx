@@ -27,7 +27,7 @@ const AboutUs = () => {
       try {
         const [barbersResponse, branchesResponse] = await Promise.all([
           api.get("/user/barbers"),
-          api.get("/branches"),
+          api.get("/branch"),
         ]);
         setBarbers(barbersResponse.data);
         setBranches(branchesResponse.data);
