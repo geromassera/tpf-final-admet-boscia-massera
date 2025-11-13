@@ -1,17 +1,48 @@
 import { Container, Row, Col, Card, Image, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
+import api from "../components/services/API/Axios";
+import { useState, useEffect, use } from "react";
+import { errorToast } from "../components/ui/toast/NotificationToast";
 
 const localImg1 = "./local-placeholder.png";
 const localImg2 = "./local-placeholder-2.png";
 const teamImg1 = "./team-1.png";
 const teamImg2 = "./team-2.png";
 const teamImg3 = "./team-3.png";
+const defaultTeamImg = "./team-default.jpg";
+
+const staticBarberImages = {
+  "Martin Lopez": teamImg1,
+  "Laura Martinez": teamImg2,
+  "Julian Gonzalez": teamImg3,
+};
 
 const AboutUs = () => {
+  const [barbers, setBarbers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [branches, setBranches] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [barbersResponse, branchesResponse] = await Promise.all([
+          api.get("/user/barbers"),
+          api.get("/branches"),
+        ]);
+        setBarbers(barbersResponse.data);
+        setBranches(branchesResponse.data);
+      } catch (err) {
+        errorToast(err.response?.data?.message || "Error al obtener datos.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
   return (
     <Container className="my-5">
       <h2 className="text-center mb-4">Sobre Nosotros</h2>
-
       {/* Nuestros Locales */}
       <Col md={12} className="mt-4">
         <h3 className="text-center mb-3">Nuestros Locales</h3>
@@ -21,12 +52,12 @@ const AboutUs = () => {
               <Image
                 src={localImg1}
                 fluid
-                alt="Local Av. Francia"
+                alt="Sucursal Centro"
                 style={{ maxHeight: 200, objectFit: "cover" }}
               />
               <Card.Body className="text-center">
-                <Card.Title>Local Av. Francia</Card.Title>
-                <Card.Text>Av. Francia 1375, Rosario</Card.Text>
+                <Card.Title>Sucursal Centro</Card.Title>
+                <Card.Text>Av Pellegrini 1234, Rosario</Card.Text>
               </Card.Body>
             </Card>
           </Col>
@@ -36,82 +67,69 @@ const AboutUs = () => {
               <Image
                 src={localImg2}
                 fluid
-                alt="Local Av. Pellegrini"
+                alt="Sucursal Norte"
                 style={{ maxHeight: 200, objectFit: "cover" }}
               />
               <Card.Body className="text-center">
-                <Card.Title>Local Av. Pellegrini</Card.Title>
-                <Card.Text>Av. Pellegrini 2500, Rosario</Card.Text>
+                <Card.Title>Sucursal Norte</Card.Title>
+                <Card.Text>Bv Rondeau 4567, Rosario</Card.Text>
               </Card.Body>
             </Card>
           </Col>
         </Row>
       </Col>
-
       {/* Nuestro equipo */}
       <Col md={12} className="mt-4">
         <h3 className="text-center mb-3">Nuestro equipo</h3>
         <Row className="g-3 justify-content-center">
-          <Col
-            xs={12}
-            sm={6}
-            md={4}
-            lg={3}
-            className="d-flex justify-content-center"
-          >
-            <figure className="text-center">
-              <Image
-                src={teamImg1}
-                roundedCircle
-                fluid
-                alt="Equipo - 1"
-                style={{ width: 180, height: 180, objectFit: "cover" }}
-              />
-              <figcaption className="mt-2">Martín</figcaption>
-            </figure>
-          </Col>
+          {loading ? (
+            <p>Cargando equipo...</p>
+          ) : (
+            barbers.map((barber) => {
+              const fullName = `${barber.name} ${barber.surname}`;
+              const imageUrl = staticBarberImages[fullName] || defaultTeamImg;
+              const branch = branches.find(
+                (b) => b.branchId === barber.branchId
+              );
+              const branchName = branch ? branch.name : null;
 
-          <Col
-            xs={12}
-            sm={6}
-            md={4}
-            lg={3}
-            className="d-flex justify-content-center"
-          >
-            <figure className="text-center">
-              <Image
-                src={teamImg2}
-                roundedCircle
-                fluid
-                alt="Equipo - 2"
-                style={{ width: 180, height: 180, objectFit: "cover" }}
-              />
-              <figcaption className="mt-2">Laura</figcaption>
-            </figure>
-          </Col>
-
-          <Col
-            xs={12}
-            sm={6}
-            md={4}
-            lg={3}
-            className="d-flex justify-content-center"
-          >
-            <figure className="text-center">
-              <Image
-                src={teamImg3}
-                roundedCircle
-                fluid
-                alt="Equipo - 3"
-                style={{ width: 180, height: 180, objectFit: "cover" }}
-              />
-              <figcaption className="mt-2">Julián</figcaption>
-            </figure>
-          </Col>
+              return (
+                <Col
+                  key={barber.userId}
+                  xs={12}
+                  sm={6}
+                  md={4}
+                  lg={3}
+                  className="d-flex justify-content-center"
+                >
+                  <figure className="text-center">
+                    <Image
+                      src={imageUrl}
+                      roundedCircle
+                      fluid
+                      alt={fullName}
+                      style={{ width: 180, height: 180, objectFit: "cover" }}
+                    />
+                    <figcaption className="mt-2">
+                      {fullName}
+                      {branchName && (
+                        <span
+                          className="d-block text-muted"
+                          style={{ fontsize: "0.9rem" }}
+                        >
+                          ({branchName})
+                        </span>
+                      )}
+                    </figcaption>
+                  </figure>
+                </Col>
+              );
+            })
+          )}
         </Row>
       </Col>
+      {/* Historia */}
       <Row className="gy-4">
-        {/* Historia */}
         <Col md={6} lg={6}>
           <Card className="shadow-sm h-100 p-3">
             <Card.Body>

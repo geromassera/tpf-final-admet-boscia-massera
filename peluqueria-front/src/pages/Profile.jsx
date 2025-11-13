@@ -23,6 +23,13 @@ const Profile = () => {
     password: "",
   });
 
+  const [errors, setErrors] = useState({
+    name: null,
+    surname: null,
+    email: null,
+    phone: null,
+    password: null,
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -54,15 +61,70 @@ const Profile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const dtoToSend = {
-      name: formData.name,
-      surname: formData.surname,
-      email: formData.email,
-      phone: formData.phone,
-    };
+    let hasError = false;
+    const newErrors = { name: null, surname: null, email: null, phone: null };
+    const dtoToSend = {};
 
+    if (formData.name && formData.name.length > 25) {
+      newErrors.name = "El nombre debe tener menos de 25 caracteres.";
+      hasError = true;
+    } else if (formData.name) {
+      dtoToSend.name = formData.name;
+    }
+
+    if (formData.surname && formData.surname.length > 25) {
+      newErrors.surname = "El apellido debe tener menos de 25 caracteres.";
+      hasError = true;
+    } else if (formData.surname) {
+      dtoToSend.surname = formData.surname;
+    }
+
+    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "El email no es válido.";
+      hasError = true;
+    } else if (formData.email) {
+      dtoToSend.email = formData.email;
+    }
+
+    const phoneRegex = /^[0-9]{10}$/;
+    const cleanNumber = formData.phone.replace(/[\s-()+\.]/g, "");
+
+    if (formData.phone && !phoneRegex.test(cleanNumber)) {
+      newErrors.phone =
+        "El teléfono (cód. de área + número) debe tener 10 dígitos.";
+      hasError = true;
+    } else if (formData.phone) {
+      dtoToSend.phone = cleanNumber;
+    }
+
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{7,}$/;
     if (formData.password) {
-      dtoToSend.password = formData.password;
+      if (!passwordRegex.test(formData.password)) {
+        newErrors.password =
+          "La contraseña debe tener al menos 7 caracteres, una letra mayúscula y un número.";
+        hasError = true;
+      } else {
+        dtoToSend.password = formData.password;
+      }
+    }
+
+    if (hasError) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setErrors({
+      name: null,
+      surname: null,
+      email: null,
+      phone: null,
+      password: null,
+    });
+
+    if (Object.keys(dtoToSend).length === 0) {
+      errorToast("No se detectaron cambios para guardar.");
+      setEditMode(false);
+      return;
     }
 
     try {
@@ -132,10 +194,14 @@ const Profile = () => {
                   <Form.Control
                     type="text"
                     name="name"
+                    className={errors.name ? "border border-danger" : ""}
                     value={formData.name}
                     onChange={handleChange}
-                    required
+                    placeholder="Dejar en blanco para mantener el actual"
                   />
+                  {errors.name && (
+                    <p className="text-danger mt-1">{errors.name}</p>
+                  )}
                 </Form.Group>
 
                 <Form.Group className="mb-3" controlId="formSurname">
@@ -143,10 +209,14 @@ const Profile = () => {
                   <Form.Control
                     type="text"
                     name="surname"
+                    className={errors.surname ? "border border-danger" : ""}
                     value={formData.surname}
                     onChange={handleChange}
-                    required
+                    placeholder="Dejar en blanco para mantener el actual"
                   />
+                  {errors.surname && (
+                    <p className="text-danger mt-1">{errors.surname}</p>
+                  )}
                 </Form.Group>
 
                 <Form.Group className="mb-3" controlId="formEmail">
@@ -154,10 +224,14 @@ const Profile = () => {
                   <Form.Control
                     type="email"
                     name="email"
+                    className={errors.email ? "border border-danger" : ""}
                     value={formData.email}
                     onChange={handleChange}
-                    required
+                    placeholder="Dejar en blanco para mantener el actual"
                   />
+                  {errors.email && (
+                    <p className="text-danger mt-1">{errors.email}</p>
+                  )}
                 </Form.Group>
 
                 <Form.Group className="mb-3" controlId="formPhone">
@@ -165,10 +239,14 @@ const Profile = () => {
                   <Form.Control
                     type="tel"
                     name="phone"
+                    className={errors.phone ? "border border-danger" : ""}
                     value={formData.phone}
                     onChange={handleChange}
-                    required
+                    placeholder="Dejar en blanco para mantener el actual"
                   />
+                  {errors.phone && (
+                    <p className="text-danger mt-1">{errors.phone}</p>
+                  )}
                 </Form.Group>
 
                 <Form.Group className="mb-3" controlId="formPassword">
@@ -176,10 +254,14 @@ const Profile = () => {
                   <Form.Control
                     type="password"
                     name="password"
+                    className={errors.password ? "border border-danger" : ""}
                     placeholder="Dejar en blanco para mantener la actual"
                     value={formData.password}
                     onChange={handleChange}
                   />
+                  {errors.password && (
+                    <p className="text-danger mt-1">{errors.password}</p>
+                  )}
                 </Form.Group>
 
                 <Button variant="success" type="submit" className="me-2">
