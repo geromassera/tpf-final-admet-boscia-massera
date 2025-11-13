@@ -11,6 +11,8 @@ function NavBar() {
 
   const navigate = useNavigate();
 
+  const isApplicant = !isLoggedIn || (isLoggedIn && user.role === "Client");
+
   const handleLogout = () => {
     handleUserLogout();
     successToast("Cierre de sesión exitoso.");
@@ -48,9 +50,11 @@ function NavBar() {
             <Nav.Link as={Link} to="/reviews">
               Opiniones
             </Nav.Link>
-             <Nav.Link as={Link} to="/workWithUs">
-              Currículum
-            </Nav.Link>
+            {isApplicant && (
+              <Nav.Link as={Link} to="/workWithUs">
+                Trabaja con nosotros
+              </Nav.Link>
+            )}
           </Nav>
           <Nav>
             {!isLoggedIn ? (
