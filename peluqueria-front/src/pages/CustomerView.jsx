@@ -70,7 +70,7 @@ const CostumerView = () => {
         return;
       }
       try {
-        const response = await api.get("/barbers", {
+        const response = await api.get("appointments/barbers", {
           params: { branchId: selectedBranch.branchId }
         });
         setBarbers(response.data || []);
@@ -90,7 +90,7 @@ const CostumerView = () => {
         return;
       }
       try {
-        const response = await api.get("/appointments/available-hours", {
+        const response = await api.get("/appointments/availability", {
           params: {
             branchId: selectedBranch.branchId,
             date: form.appointment_date,
@@ -148,7 +148,7 @@ const CostumerView = () => {
       treatmentId: parseInt(form.service, 10),
       barberId: parseInt(form.barber_id, 10),
       branchId: selectedBranch.branchId,
-      appointmentDateTime: `${form.appointment_date}T${form.appointment_time}:00`
+      appointmentDateTime: form.appointment_time
     };
 
     try {
@@ -211,8 +211,8 @@ const CostumerView = () => {
                 >
                   <option value="">Seleccionar barbero</option>
                   {barbers.map((b) => (
-                    <option key={b.userId} value={b.userId}>
-                      {b.name} {b.surname}
+                    <option key={b.id} value={b.id}>
+                      {b.name}
                     </option>
                   ))}
                 </Form.Select>
@@ -246,7 +246,7 @@ const CostumerView = () => {
                       minute: "2-digit"
                     });
                     return (
-                      <option key={idx} value={label}>
+                      <option key={idx} value={h}>
                         {label}
                       </option>
                     );
