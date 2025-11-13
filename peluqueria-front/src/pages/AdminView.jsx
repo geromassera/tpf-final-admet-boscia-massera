@@ -188,7 +188,7 @@ const AppointmentsPanel = () => {
       setLoading(true);
       const [appointmentsResponse, branchesResponse] = await Promise.all([
         api.get("/appointments/history"),
-        api.get("/branch") 
+        api.get("/branches") 
       ]);
       setAppointments(appointmentsResponse.data);
       setBranches(branchesResponse.data);
@@ -456,7 +456,7 @@ const BarberAssignmentsPanel = () => {
       setLoading(true);
       const [usersResponse, branchesResponse] = await Promise.all([
         api.get("/admin/users"),
-        api.get("/branch"), 
+        api.get("/branches"), 
       ]);
       setUsers(usersResponse.data);
       setBranches(branchesResponse.data);
@@ -728,7 +728,7 @@ const AdminPanel = () => {
         return <TreatmentsPanel />;
       case "assignments":
         return <BarberAssignmentsPanel />;
-      case "curriculums": // <-- NUEVO CASE
+      case "curriculums": 
         return <CurriculumsPanel />;
       default:
         return (

@@ -13,7 +13,7 @@ const BranchesView = () => {
   useEffect(() => {
     const fetchBranches = async () => {
       try {
-        const response = await api.get("/branch");
+        const response = await api.get("/branches");
         setBranches(response.data);
       } catch (error) {
         console.error("Error al obtener sucursales:", error);
