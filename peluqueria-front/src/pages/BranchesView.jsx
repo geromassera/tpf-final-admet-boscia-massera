@@ -1,41 +1,28 @@
-// File: peluqueria-front/src/pages/BranchesView.jsx
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Container, Row, Col, Card, Button } from "react-bootstrap";
+import api from "../components/services/API/Axios";
 
 const BranchesView = () => {
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const HARDCODED_BRANCHES = [
-    {
-      branchId: 1, 
-      name: "Sucursal Centro",
-      address: "Av. Pellegrini 1234",
-      image: "./local-placeholder.png", 
-    },
-    {
-      branchId: 2, 
-      name: "Sucursal Norte",
-      address: "Bv. Rondeau 4567",
-      image: "./local-placeholder-2.png", 
-    },
-    {
-      branchId: 3,
-      name: "Sucursal Sur",
-      address: "Boulevard 789",
-      image: "./local-placeholder-2.png", 
-    },
-  ];
+
 
   useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      setBranches(HARDCODED_BRANCHES);
-      setLoading(false);
-    }, 300);
+    const fetchBranches = async () => {
+      try {
+        const response = await api.get("/branches");
+        setBranches(response.data);
+      } catch (error) {
+        console.error("Error al obtener sucursales:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBranches();
   }, []);
 
   const handleSelectBranch = (branch) => {

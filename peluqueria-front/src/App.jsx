@@ -17,6 +17,7 @@ import Profile from "./pages/Profile";
 import LoggedRoute from "./components/routes/LoggedRoute";
 import NotFound from "./pages/NotFound";
 import About from "./pages/About";
+import WorkWithUs from "./pages/WorkWithUs";
 import Reviews from "./pages/Reviews";
 import BarberRoute from "./components/routes/BarberRoute";
 import BranchesView from "./pages/BranchesView";
@@ -64,6 +65,15 @@ function App() {
               element={
                 <LoggedRoute>
                   <BranchesView />
+                </LoggedRoute>
+              }
+            />
+
+            <Route
+              path="/workWithUs"
+              element={
+                <LoggedRoute>
+                  <WorkWithUs />
                 </LoggedRoute>
               }
             />
