@@ -12,10 +12,17 @@ import {
 import {
   successToast,
   errorToast,
+  infoToast,
 } from "../components/ui/toast/NotificationToast";
 import ConfirmAdminModal from "../components/ConfirmAdminModal";
 import api from "../components/services/API/Axios";
 import AssignBranchModal from "../components/AssignBranchModal";
+
+const statusMap = {
+  Completed: "Completado",
+  Confirmed: "Confirmado",
+  Cancelled: "Cancelado",
+};
 
 // --- Panel 1: Gestión de Usuarios ---
 const UsersPanel = ({ onUserMadeBarber }) => {
@@ -49,6 +56,9 @@ const UsersPanel = ({ onUserMadeBarber }) => {
 
       if (newRole === "Barber") {
         successToast(`Rol ${newRole} asignado correctamente.`);
+        infoToast(
+          "Recuerde asignarlo a una sucursal para que pueda empezar a recibir turnos."
+        );
         onUserMadeBarber();
       } else {
         successToast(`Rol ${newRole} asignado correctamente.`);
@@ -127,7 +137,7 @@ const UsersPanel = ({ onUserMadeBarber }) => {
                       </Button>
 
                       <Button
-                        variant="danger"
+                        variant="info"
                         size="sm"
                         className="ms-2"
                         onClick={() => handleChangeRole(user.userId, "Client")}
@@ -216,18 +226,20 @@ const AppointmentsPanel = () => {
                 hour: "2-digit",
                 minute: "2-digit",
               });
-
+              const translatedStatus = statusMap[appt.status] || appt.status;
               return (
                 <tr key={appt.id}>
                   <td>{appt.id}</td>
                   <td>{formattedDate}</td>
                   <td>{formattedTime} hs.</td>
-                  <td>{appt.status}</td>
+                  <td>{translatedStatus}</td>
                   <td>{appt.clientName}</td>
                   <td>{appt.barberName}</td>
                   <td>{appt.branchName}</td>
                   <td>{appt.treatmentName}</td>
-                  <td>$ {appt.treatmentPrice}</td>
+                  <td>
+                    {appt.status === "Cancelled" ? "-" : appt.treatmentPrice}
+                  </td>
                 </tr>
               );
             })}
@@ -387,11 +399,6 @@ const BarberAssignmentsPanel = () => {
         api.get("/admin/users"),
         api.get("/branches"),
       ]);
-      // --- DEBUG ---
-      // Vamos a ver qué nos trae la API
-      console.log("Usuarios (Users):", usersResponse.data);
-      console.log("Sucursales (Branches):", branchesResponse.data);
-      // -------------
       setUsers(usersResponse.data);
       setBranches(branchesResponse.data);
     } catch (err) {
@@ -442,7 +449,9 @@ const BarberAssignmentsPanel = () => {
                 (b) => b.branchId == barber.branchId
               );
               const branchName = assignedBranch?.name || (
-                <span className="text-danger fst-italic">Sin Asignar</span>
+                <span className="text-danger fst-bold">
+                  Sin Asignar (¡No podrá ser seleccionado para turnos!)
+                </span>
               );
 
               return (
