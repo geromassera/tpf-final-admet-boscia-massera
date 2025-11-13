@@ -1,9 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { Container, Row, Col, Card, Form, Button } from "react-bootstrap";
-import {
-  successToast,
-  errorToast,
-} from "../components/ui/toast/NotificationToast";
+import { successToast, errorToast } from "../components/ui/toast/NotificationToast";
 import { AuthenticationContext } from "../components/services/auth.context";
 import api from "../components/services/API/Axios";
 
@@ -13,17 +10,18 @@ const CostumerView = () => {
   const { user } = useContext(AuthenticationContext);
 
   const [selectedBranch, setSelectedBranch] = useState(null);
+  const [barbers, setBarbers] = useState([]);
+  const [availableHours, setAvailableHours] = useState([]);
 
   const [form, setForm] = useState({
     service: "",
     appointment_date: "",
     appointment_time: "",
-    barber_id: "any",
+    barber_id: ""
   });
 
   const today = new Date();
   const minDate = today.toISOString().split("T")[0];
-
   const maxDateObj = new Date(today);
   maxDateObj.setMonth(maxDateObj.getMonth() + 1);
   const maxDate = maxDateObj.toISOString().split("T")[0];
@@ -61,20 +59,71 @@ const CostumerView = () => {
     }
   };
 
+  useEffect(() => {
+    fetchTurnosCliente();
+  }, [user]);
+
+  useEffect(() => {
+    const fetchBarbers = async () => {
+      if (!selectedBranch?.branchId) {
+        setBarbers([]);
+        return;
+      }
+      try {
+        const response = await api.get("/barbers", {
+          params: { branchId: selectedBranch.branchId }
+        });
+        setBarbers(response.data || []);
+      } catch (err) {
+        console.error("Error al obtener barberos:", err);
+        errorToast(err.response?.data?.message || "Error al cargar barberos.");
+        setBarbers([]);
+      }
+    };
+    fetchBarbers();
+  }, [selectedBranch]);
+
+  useEffect(() => {
+    const fetchAvailableHours = async () => {
+      if (!selectedBranch?.branchId || !form.appointment_date || !form.barber_id) {
+        setAvailableHours([]);
+        return;
+      }
+      try {
+        const response = await api.get("/appointments/available-hours", {
+          params: {
+            branchId: selectedBranch.branchId,
+            date: form.appointment_date,
+            barberId: form.barber_id
+          }
+        });
+        setAvailableHours(response.data || []);
+      } catch (err) {
+        console.error("Error al cargar horas disponibles:", err);
+        setAvailableHours([]);
+      }
+    };
+    fetchAvailableHours();
+  }, [selectedBranch, form.appointment_date, form.barber_id]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
     if (name === "appointment_date") {
       const dia = new Date(value).getDay();
       if (dia === 0) {
-        errorToast(
-          "No podés reservar un turno un domingo. El local está cerrado."
-        );
+        errorToast("No podés reservar un turno un domingo. El local está cerrado.");
         return;
       }
     }
 
-    setForm({ ...form, [name]: value });
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+      ...(name === "appointment_date" || name === "barber_id"
+        ? { appointment_time: "" }
+        : {})
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -90,42 +139,33 @@ const CostumerView = () => {
       return;
     }
 
+    if (!form.service || !form.appointment_date || !form.appointment_time || !form.barber_id) {
+      errorToast("Completa todos los campos del turno.");
+      return;
+    }
+
     const appointmentData = {
-        treatmentId: parseInt(form.service, 10), 
-        barberId: parseInt(form.barber_id, 10), 
-        branchId: selectedBranch.branchId, 
-        appointmentDateTime: `${form.appointment_date}T${form.appointment_time}:00`, 
+      treatmentId: parseInt(form.service, 10),
+      barberId: parseInt(form.barber_id, 10),
+      branchId: selectedBranch.branchId,
+      appointmentDateTime: `${form.appointment_date}T${form.appointment_time}:00`
     };
 
     try {
       await api.post("/appointments", appointmentData);
-
       successToast("Turno creado correctamente.");
       setForm({
         service: "",
         appointment_date: "",
         appointment_time: "",
-        barber_id: "any",
+        barber_id: ""
       });
+      setAvailableHours([]);
       fetchTurnosCliente();
     } catch (err) {
       const message = err.response?.data?.message || "Error al crear el turno.";
       errorToast(message);
     }
-  };
-
-  useEffect(() => {
-    fetchTurnosCliente();
-  }, [user]);
-
-  const generarOpcionesHora = () => {
-    const opciones = [];
-    for (let h = 8; h <= 19; h++) {
-      const horaStr = h.toString().padStart(2, "0");
-      opciones.push(`${horaStr}:00`);
-      if (h < 19) opciones.push(`${horaStr}:30`);
-    }
-    return opciones;
   };
 
   if (loading) {
@@ -161,6 +201,23 @@ const CostumerView = () => {
                 </Form.Select>
               </Col>
 
+              <Col md={3}>
+                <Form.Select
+                  name="barber_id"
+                  value={form.barber_id}
+                  onChange={handleChange}
+                  required
+                  disabled={!selectedBranch || barbers.length === 0}
+                >
+                  <option value="">Seleccionar barbero</option>
+                  {barbers.map((b) => (
+                    <option key={b.userId} value={b.userId}>
+                      {b.name} {b.surname}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Col>
+
               <Col md={2}>
                 <Form.Control
                   type="date"
@@ -179,27 +236,21 @@ const CostumerView = () => {
                   value={form.appointment_time}
                   onChange={handleChange}
                   required
+                  disabled={availableHours.length === 0}
                 >
                   <option value="">Seleccionar hora</option>
-                  {generarOpcionesHora().map((hora, idx) => (
-                    <option key={idx} value={hora}>
-                      {hora}
-                    </option>
-                  ))}
-                </Form.Select>
-              </Col>
-
-              <Col md={3}>
-                <Form.Select
-                  name="barber_id"
-                  value={form.barber_id}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="any">Barbero </option>
-                  <option value="Martin">Martin</option>
-                  <option value="Laura">Laura</option>
-                  <option value="Julián">Julián</option>
+                  {availableHours.map((h, idx) => {
+                    const dateObj = new Date(h);
+                    const label = dateObj.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit"
+                    });
+                    return (
+                      <option key={idx} value={label}>
+                        {label}
+                      </option>
+                    );
+                  })}
                 </Form.Select>
               </Col>
 
@@ -208,7 +259,13 @@ const CostumerView = () => {
                   type="submit"
                   variant="primary"
                   className="w-100"
-                  disabled={!selectedBranch}
+                  disabled={
+                    !selectedBranch ||
+                    !form.service ||
+                    !form.appointment_date ||
+                    !form.appointment_time ||
+                    !form.barber_id
+                  }
                 >
                   Reservar
                 </Button>
@@ -259,34 +316,5 @@ const CostumerView = () => {
   );
 };
 
-function isPastDate(dateStr) {
-  const hoy = new Date();
-  const fecha = new Date(dateStr);
-  hoy.setHours(0, 0, 0, 0);
-  fecha.setHours(0, 0, 0, 0);
-  return fecha < hoy;
-}
-
-function isWithinOneMonth(dateStr) {
-  const hoy = new Date();
-  const fecha = new Date(dateStr);
-  hoy.setHours(0, 0, 0, 0);
-  fecha.setHours(0, 0, 0, 0);
-
-  const max = new Date(hoy);
-  max.setMonth(max.getMonth() + 1);
-
-  return fecha <= max;
-}
-
-function isClosedDay(dateStr) {
-  const fecha = new Date(dateStr);
-  return fecha.getDay() === 0;
-}
-
-function isValidHour(timeStr) {
-  const [hora, minutos] = timeStr.split(":").map(Number);
-  return hora >= 10 && (hora < 19 || (hora === 19 && minutos === 0));
-}
-
 export default CostumerView;
+
