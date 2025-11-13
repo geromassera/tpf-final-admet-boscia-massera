@@ -79,8 +79,8 @@ const AboutUs = () => {
         </Row>
       </Col>
       {/* Nuestro equipo */}
-      <Col md={12} className="mt-4">
-        <h3 className="text-center mb-3">Nuestro equipo</h3>
+      <Col md={12} className="mt-5">
+        <h3 className="text-center mb-5">Nuestro equipo</h3>
         <Row className="g-3 justify-content-center">
           {loading ? (
             <p>Cargando equipo...</p>

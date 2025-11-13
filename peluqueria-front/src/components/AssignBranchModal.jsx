@@ -14,7 +14,7 @@ const AssignBranchModal = ({ show, handleClose, barber, onSaveSuccess }) => {
         try {
           setLoading(true);
           setError(null);
-          const response = await api.get("/branches");
+          const response = await api.get("/branch");
           setBranches(response.data);
           setSelectedBranchId(barber?.branchId || "");
         } catch (err) {
