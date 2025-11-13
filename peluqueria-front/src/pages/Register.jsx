@@ -14,11 +14,11 @@ const Register = () => {
   const [surname, setSurname] = useState("");
   const [phone, setPhone] = useState("");
   const [errors, setErrors] = useState({
-    name: false,
-    surname: false,
-    email: false,
-    password: false,
-    phone: false,
+    name: null,
+    surname: null,
+    email: null,
+    password: null,
+    phone: null,
   });
   const navigate = useNavigate();
 
@@ -47,37 +47,54 @@ const Register = () => {
 
     let hasError = false;
     const newErrors = {
-      name: false,
-      surname: false,
-      email: false,
-      password: false,
-      phone: false,
+      name: null,
+      surname: null,
+      email: null,
+      password: null,
+      phone: null,
     };
 
     if (!name) {
-      newErrors.name = true;
+      newErrors.name = "El nombre es requerido.";
+      hasError = true;
+    } else if (name.length > 25) {
+      newErrors.name = "El nombre debe tener menos de 25 caracteres.";
       hasError = true;
     }
     if (!surname) {
-      newErrors.surname = true;
+      newErrors.surname = "El apellido es requerido.";
+      hasError = true;
+    } else if (surname.length > 25) {
+      newErrors.surname = "El apellido debe tener menos de 25 caracteres.";
       hasError = true;
     }
 
     if (!email) {
-      newErrors.email = true;
+      newErrors.email = "El email es requerido.";
+      hasError = true;
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = "El formato de email no es válido.";
       hasError = true;
     }
+
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{7,}$/;
     if (!password) {
-      newErrors.password = true;
+      newErrors.password = "La contraseña es requerida.";
+      hasError = true;
+    } else if (!passwordRegex.test(password)) {
+      newErrors.password =
+        "La contraseña debe tener al menos 7 caracteres, una mayúscula y un número.";
       hasError = true;
     }
 
     const phoneRegex = /^[0-9]{10}$/;
+    const cleanNumber = phone.replace(/[\s-()+\.]/g, "");
     if (!phone) {
-      newErrors.phone = true;
+      newErrors.phone = "El teléfono es requerido.";
       hasError = true;
-    } else if (!phoneRegex.test(phone.replace(/\s+/g, ""))) {
-      newErrors.phone = true;
+    } else if (!phoneRegex.test(cleanNumber)) {
+      newErrors.phone =
+        "El teléfono (cód de área + número) debe tener 10 dígitos.";
       hasError = true;
     }
 
@@ -86,15 +103,23 @@ const Register = () => {
       return;
     }
 
+    setErrors({
+      name: null,
+      surname: null,
+      email: null,
+      password: null,
+      phone: null,
+    });
+
     const newUser = {
       name,
       surname,
       email,
-      phone,
+      phone: cleanNumber,
       password,
     };
     try {
-      const res = await api.post("/authentication/register", newUser);
+      await api.post("/authentication/register", newUser);
       successToast(
         "Usuario registrado exitosamente. Inicie sesión para continuar."
       );
@@ -120,60 +145,62 @@ const Register = () => {
             <FormGroup className="mb-3">
               <Form.Control
                 type="text"
-                className={errors.name && "border border-danger"}
-                required
+                className={errors.name ? "border border-danger" : ""}
                 placeholder="Ingrese su nombre"
                 onChange={handleNameChange}
                 value={name}
               />
-              {errors.name && <p>El nombre es requerido.</p>}
+              {errors.name && <p className="text-danger mt-1">{errors.name}</p>}
             </FormGroup>
 
             <FormGroup className="mb-3">
               <Form.Control
                 type="text"
-                className={errors.surname && "border border-danger"}
-                required
+                className={errors.surname ? "border border-danger" : ""}
                 placeholder="Ingrese su apellido"
                 onChange={handleSurnameChange}
                 value={surname}
               />
-              {errors.surname && <p>El apellido es requerido.</p>}
+              {errors.surname && (
+                <p className="text-danger mt-1">{errors.surname}</p>
+              )}
             </FormGroup>
 
             <FormGroup className="mb-3">
               <Form.Control
                 type="email"
-                className={errors.email && "border border-danger"}
-                required
+                className={errors.email ? "border border-danger" : ""}
                 placeholder="Ingresar email"
                 onChange={handleEmailChange}
                 value={email}
               />
-              {errors.email && <p>El email es requerido.</p>}
+              {errors.email && (
+                <p className="text-danger mt-1">{errors.email}</p>
+              )}
             </FormGroup>
             <FormGroup className="mb-3">
               <Form.Control
                 type="tel"
-                required
-                className={errors.phone && "border border-danger"}
-                placeholder="Ingresar teléfono (10 dígitos)"
+                className={errors.phone ? "border border-danger" : ""}
+                placeholder="Ingresar teléfono (Ej: 3411234567)"
                 onChange={handlePhoneChange}
-                pattern="[0-9]{10}"
-                title="El teléfono debe tener exactamente 10 dígitos, sin espacios ni letras."
                 value={phone}
               />
-              {errors.phone && <p>El teléfono es requerido.</p>}
+              {errors.phone && (
+                <p className="text-danger mt-1">{errors.phone}</p>
+              )}
             </FormGroup>
             <FormGroup className="mb-3">
               <Form.Control
                 type="password"
-                className={errors.password && "border border-danger"}
+                className={errors.password ? "border border-danger" : ""}
                 placeholder="Ingresar contraseña"
                 onChange={handlePasswordChange}
                 value={password}
               />
-              {errors.password && <p>La contraseña es requerida.</p>}
+              {errors.password && (
+                <p className="text-danger mt-1">{errors.password}</p>
+              )}
             </FormGroup>
             <div className="d-flex justify-content-center mb-3">
               <Button variant="primary" type="submit" className="me-2">
