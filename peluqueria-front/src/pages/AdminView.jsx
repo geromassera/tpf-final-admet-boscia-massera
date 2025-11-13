@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Button,
   Table,
@@ -7,6 +7,7 @@ import {
   Container,
   Row,
   Col,
+  Card,
   ButtonGroup,
 } from "react-bootstrap";
 import {
@@ -175,72 +176,204 @@ const UsersPanel = ({ onUserMadeBarber }) => {
   );
 };
 
-// --- Panel 2: Gestión de Turnos ---
+// --- Panel 2: Gestión de Turnos y Estadísticas---
 const AppointmentsPanel = () => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [branches, setBranches] = useState([]);
   const [filterDate, setFilterDate] = useState("");
   const [filterBranchId, setFilterBranchId] = useState("");
+  const [statsMonth, setStatsMonth] = useState(
+    new Date().toISOString().slice(0, 7)
+  );
 
-  const fetchAppointments = async () => {
+  const fetchInitalData = async () => {
     try {
       setLoading(true);
       const [appointmentsResponse, branchesResponse] = await Promise.all([
         api.get("/appointments/history"),
-        api.get("/branches") 
+        api.get("/branches"),
       ]);
       setAppointments(appointmentsResponse.data);
       setBranches(branchesResponse.data);
     } catch (err) {
-      errorToast(err.response?.data?.message || "Error al obtener los turnos o sucursales.");
+      errorToast(
+        err.response?.data?.message ||
+          "Error al obtener los turnos o sucursales."
+      );
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAppointments();
+    fetchInitalData();
   }, []);
 
-  // Lógica de Filtrado en el Cliente (Solo por fecha)
-  const filteredAppointments = appointments.filter(appt => {
-    // 1. Filtro por Sucursal
-    const selectedBranch = branches.find(b => b.branchId.toString() === filterBranchId);
-    
-    // Si no hay filtro de sucursal O el nombre de la sucursal coincide
-    const branchMatch = !filterBranchId || appt.branchName === (selectedBranch?.name || "");
+  const statistics = useMemo(() => {
+    const [year, month] = statsMonth.split("-").map(Number);
 
-    // 2. Filtro por Fecha
-    // Extrae la parte de la fecha (YYYY-MM-DD) del timestamp de la cita
-    const apptDate = new Date(appt.appointmentDateTime).toISOString().split('T')[0];
-    const dateMatch = !filterDate || apptDate === filterDate;
-    
-    return branchMatch && dateMatch;
-  });
+    const monthlyAppointments = appointments.filter((appt) => {
+      const apptDate = new Date(appt.appointmentDateTime);
+      return (
+        apptDate.getFullYear() === year && apptDate.getMonth() + 1 === month
+      );
+    });
 
-  const handleClearFilters = () => {
+    const completedAppointments = monthlyAppointments.filter(
+      (appt) => appt.status === "Completed"
+    );
+    const totalEarnings = completedAppointments.reduce(
+      (sum, appt) => sum + appt.price,
+      0
+    );
+    const barberCounts = completedAppointments.reduce((acc, appt) => {
+      const name = appt.barberName || "N/D";
+      acc[name] = (acc[name] || 0) + 1;
+      return acc;
+    }, {});
+    const topBarbers = Object.entries(barberCounts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3);
+    const treatmentCounts = completedAppointments.reduce((acc, appt) => {
+      const name = appt.treatmentName || "N/D";
+      acc[name] = (acc[name] || 0) + 1;
+      return acc;
+    }, {});
+    const topTreatments = Object.entries(treatmentCounts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3);
+
+    return { totalEarnings, topBarbers, topTreatments };
+  }, [appointments, statsMonth]);
+
+  const filteredTableAppointments = useMemo(() => {
+    return appointments.filter((appt) => {
+      const selectedBranch = branches.find(
+        (b) => b.branchId.toString() === filterBranchId
+      );
+      const branchMatch =
+        !filterBranchId || appt.branchName === (selectedBranch?.name || "");
+      const apptDate = new Date(appt.appointmentDateTime)
+        .toISOString()
+        .split("T")[0];
+      const dateMatch = !filterDate || apptDate === filterDate;
+      return branchMatch && dateMatch;
+    });
+  }, [appointments, filterDate, filterBranchId, branches]);
+
+  const handleStatsMonthChange = (direction) => {
+    const currentDate = new Date(statsMonth + "-02");
+    currentDate.setMonth(currentDate.getMonth() + direction);
+    setStatsMonth(currentDate.toISOString().slice(0, 7));
+  };
+  const handleClearTableFilters = () => {
     setFilterDate("");
+    setFilterBranchId("");
   };
 
   if (loading) return <p>Cargando turnos...</p>;
 
   return (
     <>
-      <h3 className="mb-4">Historial de Todos los Turnos</h3>
+      <h3 className="mb-4">Estadísticas Mensuales</h3>
+
+      <Row className="mb-3">
+        <Col md={6}>
+          <Form.Group>
+            <Form.Label>Seleccionar Mes para Estadísticas</Form.Label>
+            <InputGroup>
+              <Button
+                variant="outline-secondary"
+                onClick={() => handleStatsMonthChange(-1)}
+              >
+                {"< Mes Ant."}
+              </Button>
+              <Form.Control
+                type="month"
+                value={statsMonth}
+                onChange={(e) => setStatsMonth(e.target.value)}
+              />
+              <Button
+                variant="outline-secondary"
+                onClick={() => handleStatsMonthChange(1)}
+              >
+                {"Mes Sig. >"}
+              </Button>
+            </InputGroup>
+          </Form.Group>
+        </Col>
+      </Row>
+
+      <Row className="mb-4">
+        <Col md={4}>
+          <Card className="text-center shadow-sm h-100">
+            <Card.Header className="fw-bold">
+              Ganancias (Completados)
+            </Card.Header>
+            <Card.Body>
+              <Card.Text className="fs-3 fw-bold">
+                $ {statistics.totalEarnings.toLocaleString("es-AR")}
+              </Card.Text>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={4}>
+          <Card className="shadow-sm h-100">
+            <Card.Header className="text-center fw-bold">
+              Top 3 Barberos (Completados)
+            </Card.Header>
+            <Card.Body>
+              <ol style={{ paddingLeft: "20px" }}>
+                {statistics.topBarbers.map((barber) => (
+                  <li key={barber.name}>
+                    {barber.name} ({barber.count} turnos)
+                  </li>
+                ))}
+              </ol>
+              {statistics.topBarbers.length === 0 && (
+                <p className="text-muted text-center m-0">Sin datos</p>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={4}>
+          <Card className="shadow-sm h-100">
+            <Card.Header className="text-center fw-bold">
+              Top 3 Tratamientos (Completados)
+            </Card.Header>
+            <Card.Body>
+              <ol style={{ paddingLeft: "20px" }}>
+                {statistics.topTreatments.map((treatment) => (
+                  <li key={treatment.name}>
+                    {treatment.name} ({treatment.count} turnos)
+                  </li>
+                ))}
+              </ol>
+              {statistics.topTreatments.length === 0 && (
+                <p className="text-muted text-center m-0">Sin datos</p>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+      <hr className="my-5" />
+      <h3 className="mb-4">Detalle de Turnos</h3>
       <Form as={Row} className="mb-4 g-3 bg-light p-3 border rounded">
         <Form.Group as={Col} md="4" controlId="filterAppointmentDate">
-          <Form.Label>Filtrar por Fecha de Turno</Form.Label>
-          <Form.Control 
-            type="date" 
+          <Form.Label>Filtrar por Fecha (Día)</Form.Label>
+          <Form.Control
+            type="date"
             value={filterDate}
             onChange={(e) => setFilterDate(e.target.value)}
           />
         </Form.Group>
-        
         <Form.Group as={Col} md="4" controlId="filterBranch">
           <Form.Label>Filtrar por Sucursal</Form.Label>
-          <Form.Select 
+          <Form.Select
             value={filterBranchId}
             onChange={(e) => setFilterBranchId(e.target.value)}
           >
@@ -252,23 +385,21 @@ const AppointmentsPanel = () => {
             ))}
           </Form.Select>
         </Form.Group>
-        
         <Col md="4" className="d-flex align-items-end">
-          <Button variant="outline-secondary" onClick={handleClearFilters}>
-            Limpiar Filtros
+          <Button variant="outline-secondary" onClick={handleClearTableFilters}>
+            Limpiar Filtros de Tabla
           </Button>
         </Col>
       </Form>
-      
-      {filteredAppointments.length === 0 && appointments.length > 0 ? (
-        <p>No hay turnos registrados que coincidan con los filtros.</p>
-      ) : filteredAppointments.length === 0 ? (
-        <p>No hay turnos registrados.</p>
+
+      {filteredTableAppointments.length === 0 ? (
+        <p>
+          No hay turnos registrados que coincidan con los filtros de la tabla.
+        </p>
       ) : (
         <Table striped bordered hover responsive>
           <thead>
             <tr>
-              <th>ID</th>
               <th>Fecha</th>
               <th>Hora</th>
               <th>Estado</th>
@@ -280,25 +411,27 @@ const AppointmentsPanel = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredAppointments.map((appt) => { 
+            {filteredTableAppointments.map((appt) => {
               const date = new Date(appt.appointmentDateTime);
               const formattedDate = date.toLocaleDateString("es-AR");
               const formattedTime = date.toLocaleTimeString("es-AR", {
                 hour: "2-digit",
                 minute: "2-digit",
               });
+              const translatedStatus = statusMap[appt.status] || appt.status;
 
               return (
                 <tr key={appt.id}>
-                  <td>{appt.id}</td>
                   <td>{formattedDate}</td>
                   <td>{formattedTime} hs.</td>
-                  <td>{appt.status}</td>
+                  <td>{translatedStatus}</td>
                   <td>{appt.clientName}</td>
                   <td>{appt.barberName}</td>
                   <td>{appt.branchName}</td>
                   <td>{appt.treatmentName}</td>
-                  <td>$ {appt.treatmentPrice}</td>
+                  <td>
+                    {appt.status === "Cancelled" ? "-" : `$ ${appt.price}`}
+                  </td>
                 </tr>
               );
             })}
@@ -456,7 +589,7 @@ const BarberAssignmentsPanel = () => {
       setLoading(true);
       const [usersResponse, branchesResponse] = await Promise.all([
         api.get("/admin/users"),
-        api.get("/branches"), 
+        api.get("/branches"),
       ]);
       setUsers(usersResponse.data);
       setBranches(branchesResponse.data);
@@ -547,17 +680,18 @@ const BarberAssignmentsPanel = () => {
   );
 };
 
+// --- Panel 5: Curriculums ---
 const CurriculumsPanel = () => {
-  const [curriculums, setCurriculums] = useState([]); 
+  const [curriculums, setCurriculums] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  const [filterStatus, setFilterStatus] = useState("all"); 
-  const [filterDate, setFilterDate] = useState(""); 
+
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterDate, setFilterDate] = useState("");
 
   const fetchCurriculums = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/admin/curriculums"); 
+      const response = await api.get("/admin/curriculums");
       setCurriculums(response.data);
     } catch (err) {
       errorToast(
@@ -574,29 +708,25 @@ const CurriculumsPanel = () => {
 
   const handleDownload = async (curriculumId, originalFileName) => {
     try {
-      // Endpoint seguro para descargar y marcar como visto
       const response = await api.get(
         `/admin/curriculum/${curriculumId}/download`,
         {
-          responseType: "blob", 
+          responseType: "blob",
         }
       );
 
-      // Crea un objeto URL para el blob
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
-      // Utiliza el nombre original del archivo
-      link.setAttribute("download", originalFileName); 
+      link.setAttribute("download", originalFileName);
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-      
+
       successToast("CV descargado. Marcado como visto.");
-      
-      // Actualiza la lista para reflejar el estado "Visto"
-      fetchCurriculums(); 
+
+      fetchCurriculums();
     } catch (err) {
       errorToast("Error al descargar el CV.");
     }
@@ -607,14 +737,11 @@ const CurriculumsPanel = () => {
   };
 
   const filteredCurriculums = curriculums.filter((cv) => {
-    // 1. Filtro de Estado (Visto/No Visto)
     const statusMatch =
       filterStatus === "all" ||
       (filterStatus === "reviewed" && cv.isReviewed) ||
       (filterStatus === "unreviewed" && !cv.isReviewed);
 
-    // 2. Filtro de Fecha
-    // Compara solo la parte YYYY-MM-DD de la fecha (ignora la hora/zona horaria)
     const dateMatch =
       !filterDate ||
       new Date(cv.uploadDate).toISOString().startsWith(filterDate);
@@ -628,12 +755,11 @@ const CurriculumsPanel = () => {
     <>
       <h3 className="mb-4">Gestión de Curriculums</h3>
 
-      {/* --- Controles de Filtros --- */}
       <Form as={Row} className="mb-3 g-3 bg-light p-3 border rounded">
         <Form.Group as={Col} md="4" controlId="filterStatus">
           <Form.Label>Filtrar por Visto</Form.Label>
-          <Form.Select 
-            value={filterStatus} 
+          <Form.Select
+            value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
           >
             <option value="all">Todos</option>
@@ -641,16 +767,16 @@ const CurriculumsPanel = () => {
             <option value="unreviewed">No Visto</option>
           </Form.Select>
         </Form.Group>
-        
+
         <Form.Group as={Col} md="4" controlId="filterDate">
           <Form.Label>Filtrar por Fecha de Subida</Form.Label>
-          <Form.Control 
-            type="date" 
+          <Form.Control
+            type="date"
             value={filterDate}
             onChange={(e) => setFilterDate(e.target.value)}
           />
         </Form.Group>
-        
+
         <Col md="4" className="d-flex align-items-end">
           <Button variant="outline-secondary" onClick={clearFilters}>
             Limpiar Filtros
@@ -658,7 +784,6 @@ const CurriculumsPanel = () => {
         </Col>
       </Form>
 
-      {/* --- Tabla de Resultados --- */}
       {filteredCurriculums.length === 0 ? (
         <p>No hay postulaciones que coincidan con los filtros seleccionados.</p>
       ) : (
@@ -675,7 +800,6 @@ const CurriculumsPanel = () => {
             </tr>
           </thead>
           <tbody>
-            {/* Usamos la lista filtrada */}
             {filteredCurriculums.map((cv) => (
               <tr key={cv.id}>
                 <td>{cv.id}</td>
@@ -728,7 +852,7 @@ const AdminPanel = () => {
         return <TreatmentsPanel />;
       case "assignments":
         return <BarberAssignmentsPanel />;
-      case "curriculums": 
+      case "curriculums":
         return <CurriculumsPanel />;
       default:
         return (
@@ -763,7 +887,7 @@ const AdminPanel = () => {
               }
               onClick={() => setActiveView("appointments")}
             >
-              Ver Todos los Turnos
+              Turnos y Estadísticas
             </Button>
             <Button
               variant={
