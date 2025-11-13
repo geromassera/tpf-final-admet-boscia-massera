@@ -91,10 +91,10 @@ const CostumerView = () => {
     }
 
     const appointmentData = {
-      treatmentId: parseInt(form.service, 10),
-      barberId: parseInt(form.barber_id, 10),
-      branchId: selectedBranch.branchId,
-      appointmentDateTime: `${form.appointment_date}T${form.appointment_time}:00`,
+        treatmentId: parseInt(form.service, 10), 
+        barberId: parseInt(form.barber_id, 10), 
+        branchId: selectedBranch.branchId, 
+        appointmentDateTime: `${form.appointment_date}T${form.appointment_time}:00`, 
     };
 
     try {
