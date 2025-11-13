@@ -98,6 +98,7 @@ const CostumerView = () => {
           }
         });
         setAvailableHours(response.data || []);
+        console.log("Horas disponibles:", response.data);
       } catch (err) {
         console.error("Error al cargar horas disponibles:", err);
         setAvailableHours([]);
@@ -112,7 +113,7 @@ const CostumerView = () => {
     if (name === "appointment_date") {
       const dia = new Date(value).getDay();
       if (dia === 0) {
-        errorToast("No podés reservar un turno un domingo. El local está cerrado.");
+        errorToast("No podés reservar un turno un domingo o lunes. El local está cerrado.");
         return;
       }
     }
