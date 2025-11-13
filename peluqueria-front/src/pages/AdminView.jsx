@@ -15,9 +15,10 @@ import {
 } from "../components/ui/toast/NotificationToast";
 import ConfirmAdminModal from "../components/ConfirmAdminModal";
 import api from "../components/services/API/Axios";
+import AssignBranchModal from "../components/AssignBranchModal";
 
 // --- Panel 1: Gestión de Usuarios ---
-const UsersPanel = () => {
+const UsersPanel = ({ onUserMadeBarber }) => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedUserId, setSelectedUserId] = useState(null);
@@ -45,8 +46,14 @@ const UsersPanel = () => {
   const handleChangeRole = async (userId, newRole) => {
     try {
       await api.patch(`/admin/users/${userId}/role`, { newRole });
-      successToast(`Rol ${newRole} asignado correctamente.`);
-      fetchUsers();
+
+      if (newRole === "Barber") {
+        successToast(`Rol ${newRole} asignado correctamente.`);
+        onUserMadeBarber();
+      } else {
+        successToast(`Rol ${newRole} asignado correctamente.`);
+        fetchUsers();
+      }
     } catch (err) {
       console.log("Error al cambiar el rol:", err);
       errorToast(err.response?.data?.message || "Hubo un problema.");
@@ -365,6 +372,113 @@ const TreatmentsPanel = () => {
   );
 };
 
+// --- Panel 4: Asignación de Barberos ---
+const BarberAssignmentsPanel = () => {
+  const [users, setUsers] = useState([]);
+  const [branches, setBranches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedBarber, setSelectedBarber] = useState(null);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [usersResponse, branchesResponse] = await Promise.all([
+        api.get("/admin/users"),
+        api.get("/branches"),
+      ]);
+      // --- DEBUG ---
+      // Vamos a ver qué nos trae la API
+      console.log("Usuarios (Users):", usersResponse.data);
+      console.log("Sucursales (Branches):", branchesResponse.data);
+      // -------------
+      setUsers(usersResponse.data);
+      setBranches(branchesResponse.data);
+    } catch (err) {
+      errorToast(err.response?.data?.message || "Error al obtener datos.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleOpenModal = (barber) => {
+    setSelectedBarber(barber);
+    setShowModal(true);
+  };
+
+  const handleSaveSuccess = () => {
+    successToast("Barbero asignado correctamente.");
+    fetchData();
+  };
+
+  if (loading) return <p>Cargando datos...</p>;
+
+  const barbers = users.filter((user) => user.role === "Barber");
+
+  return (
+    <>
+      <h3>Asignación de Barberos</h3>
+      <p>Asigne o cambie la sucursal de trabajo de cada barbero.</p>
+      <Table striped bordered hover responsive>
+        <thead>
+          <tr>
+            <th>Barbero</th>
+            <th>Sucursal Actual</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          {barbers.length === 0 ? (
+            <tr>
+              <td colSpan="3">No hay usuarios con el rol "Barber".</td>
+            </tr>
+          ) : (
+            barbers.map((barber) => {
+              const assignedBranch = branches.find(
+                (b) => b.branchId == barber.branchId
+              );
+              const branchName = assignedBranch?.name || (
+                <span className="text-danger fst-italic">Sin Asignar</span>
+              );
+
+              return (
+                <tr key={barber.userId}>
+                  <td>
+                    {barber.name} {barber.surname}
+                  </td>
+                  <td>{branchName}</td>
+                  <td>
+                    <Button
+                      variant="outline-primary"
+                      size="sm"
+                      onClick={() => handleOpenModal(barber)}
+                    >
+                      {barber.branchId ? "Cambiar" : "Asignar"}
+                    </Button>
+                  </td>
+                </tr>
+              );
+            })
+          )}
+        </tbody>
+      </Table>
+
+      {selectedBarber && (
+        <AssignBranchModal
+          show={showModal}
+          handleClose={() => setShowModal(false)}
+          barber={selectedBarber}
+          onSaveSuccess={handleSaveSuccess}
+        />
+      )}
+    </>
+  );
+};
+
 // --- COMPONENTE PRINCIPAL (Panel de Admin) ---
 const AdminPanel = () => {
   const [activeView, setActiveView] = useState("users");
@@ -372,13 +486,19 @@ const AdminPanel = () => {
   const renderView = () => {
     switch (activeView) {
       case "users":
-        return <UsersPanel />;
+        return (
+          <UsersPanel onUserMadeBarber={() => setActiveView("assignments")} />
+        );
       case "appointments":
         return <AppointmentsPanel />;
       case "treatments":
         return <TreatmentsPanel />;
+      case "assignments":
+        return <BarberAssignmentsPanel />;
       default:
-        return <UsersPanel />;
+        return (
+          <UsersPanel onUserMadeBarber={() => setActiveView("assignments")} />
+        );
     }
   };
 
@@ -393,6 +513,14 @@ const AdminPanel = () => {
               onClick={() => setActiveView("users")}
             >
               Gestión de Usuarios
+            </Button>
+            <Button
+              variant={
+                activeView === "assignments" ? "primary" : "outline-primary"
+              }
+              onClick={() => setActiveView("assignments")}
+            >
+              Asignar Barberos
             </Button>
             <Button
               variant={
