@@ -1,7 +1,7 @@
 import { Container, Row, Col, Card, Image, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import api from "../components/services/API/Axios";
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import { errorToast } from "../components/ui/toast/NotificationToast";
 
 const localImg1 = "./local-placeholder.png";
