@@ -1,18 +1,21 @@
 import { useNavigate } from "react-router-dom";
 import { Button, Container, Row, Col, Card } from "react-bootstrap";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AuthenticationContext } from "../components/services/auth.context";
+import api from "../components/services/API/Axios";
 
 const Home = () => {
   const navigate = useNavigate();
   const { isLoggedIn, user } = useContext(AuthenticationContext);
 
+  const [appointments, setAppointments] = useState([]);
+  const [loadingAppointments, setLoadingAppointments] = useState(false);
 
   const renderBotonPorRol = () => {
     if (!user) return null;
 
     switch (user.role) {
-      case "Client": 
+      case "Client":
         return (
           <Button
             variant="primary"
@@ -47,8 +50,36 @@ const Home = () => {
     }
   };
 
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      if (!isLoggedIn || !user || user.role !== "Client") {
+        setAppointments([]);
+        return;
+      }
+
+      try {
+        setLoadingAppointments(true);
+        const response = await api.get("/appointments/my-appointments");
+        setAppointments(response.data || []);
+      } catch (error) {
+        console.error("Error al obtener turnos del cliente:", error);
+        setAppointments([]);
+      } finally {
+        setLoadingAppointments(false);
+      }
+    };
+
+    fetchAppointments();
+  }, [isLoggedIn, user]);
+
+  const turnosVisibles = appointments.filter(
+    (turno) => turno.status !== "Cancelado" && turno.status !== "Completed"
+  );
+
+  const proximosTurnos = turnosVisibles.slice(0, 3);
+
   return (
-    <Container className="mt-5">     
+    <Container className="mt-5">
       <div className="bg-light p-5 rounded-lg m-3 text-center shadow">
         {!isLoggedIn ? (
           <>
@@ -73,6 +104,57 @@ const Home = () => {
               ¡Hola, {user.name}! ¿Qué querés hacer hoy?
             </h2>
             {renderBotonPorRol()}
+
+            {user.role === "Client" && (
+              <div className="mt-5 text-start">
+                <h4 className="mb-3">Mis próximos turnos</h4>
+                {loadingAppointments ? (
+                  <p>Cargando turnos...</p>
+                ) : proximosTurnos.length === 0 ? (
+                  <p className="text-muted">
+                    No tenés turnos reservados. ¡Sacá uno desde el botón de arriba!
+                  </p>
+                ) : (
+                  <Row className="g-3">
+                    {proximosTurnos.map((turno) => {
+                      const precio =
+                        turno.price ??
+                        "";
+
+                      return (
+                        <Col md={4} key={turno.id}>
+                          <Card className="h-100 shadow-sm">
+                            <Card.Body>
+                              <Card.Text>
+                                <strong>Fecha y hora:</strong>{" "}
+                                {new Date(
+                                  turno.appointmentDateTime
+                                ).toLocaleString()}
+                                <br />
+                                <strong>Estado:</strong> {turno.status}
+                                <br />
+                                <strong>Barbero:</strong> {turno.barberName}
+                                <br />
+                                <strong>Precio:</strong> ${precio !== "" ? precio : "N/D"}
+                              </Card.Text>
+                            </Card.Body>
+                          </Card>
+                        </Col>
+                      );
+                    })}
+                  </Row>
+                )}
+                <div className="mt-3">
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    onClick={() => navigate("/appointments")}
+                  >
+                    Ver todos mis turnos
+                  </Button>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>

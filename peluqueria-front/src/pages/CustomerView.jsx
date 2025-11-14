@@ -297,6 +297,8 @@ const CostumerView = () => {
                         <strong>Barbero:</strong> {turno.barberName}
                         <br />
                         <strong>Estado:</strong> {turno.status}
+                        <br />
+                        <strong>Precio:</strong> ${turno.price}
                       </Card.Text>
                       <Button
                         variant="danger"
@@ -318,4 +320,3 @@ const CostumerView = () => {
 };
 
 export default CostumerView;
-
