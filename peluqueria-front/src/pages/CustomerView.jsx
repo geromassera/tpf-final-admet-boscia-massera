@@ -1,6 +1,10 @@
 import { useContext, useEffect, useState } from "react";
-import { Container, Row, Col, Card, Form, Button } from "react-bootstrap";
-import { successToast, errorToast } from "../components/ui/toast/NotificationToast";
+import { Container, Row, Col, Card, Form, Button, Image, Modal } from "react-bootstrap";
+import { useNavigate } from "react-router-dom"; 
+import {
+  successToast,
+  errorToast,
+} from "../components/ui/toast/NotificationToast";
 import { AuthenticationContext } from "../components/services/auth.context";
 import api from "../components/services/API/Axios";
 
@@ -11,9 +15,12 @@ const CostumerView = () => {
   const [turnos, setTurnos] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user } = useContext(AuthenticationContext);
+  const navigate = useNavigate(); 
+  
   const [selectedBranch, setSelectedBranch] = useState(null);
   const [barbers, setBarbers] = useState([]);
   const [availableHours, setAvailableHours] = useState([]);
+  const [loadingResources, setLoadingResources] = useState(false);
 
   const [form, setForm] = useState({
     service: "",
@@ -31,45 +38,14 @@ const CostumerView = () => {
   useEffect(() => {
     const storedBranch = localStorage.getItem("selectedBranch");
     if (storedBranch) {
-      setSelectedBranch(JSON.parse(storedBranch));
+      const branchData = JSON.parse(storedBranch);
+      setSelectedBranch(branchData);
+      // No llamar a fetchResources aquí; se ejecutará por dependencia de selectedBranch
     } else {
       errorToast("Por favor, selecciona una sucursal primero."); 
       navigate("/branches"); 
     }
-  }, [navigate]); 
-
-  useEffect(() => {
-    // Solo ejecutar si la sucursal ha sido cargada
-    if (selectedBranch) {
-      const fetchResources = async () => {
-        setLoadingResources(true);
-        try {
-          // Hacemos ambas llamadas en paralelo
-          const [barbersRes, treatmentsRes] = await Promise.all([
-            api.get("/user/barbers"), // Endpoint público que trae TODOS los barberos
-            api.get("/treatment")     // Endpoint (autenticado) que trae los servicios
-          ]);
-          
-          // 1. Filtrar barberos por la sucursal seleccionada
-          const filteredBarbers = barbersRes.data.filter(
-            (barber) => barber.branchId === selectedBranch.branchId
-          );
-          setAvailableBarbers(filteredBarbers);
-
-          // 2. Cargar servicios
-          setAvailableTreatments(treatmentsRes.data);
-          
-        } catch (err) {
-          errorToast(err.response?.data?.message || "Error al cargar barberos o servicios.");
-        } finally {
-          setLoadingResources(false);
-        }
-      };
-      
-      fetchResources();
-    }
-  }, [selectedBranch]);
-
+  }, [navigate]);
 
   const fetchTurnosCliente = async () => {
     if (!user?.userId) {
@@ -211,6 +187,15 @@ const CostumerView = () => {
     return <p className="text-center mt-5">Cargando tus turnos...</p>;
   }
 
+  const getBranchImage = (branchId) => {
+    if (branchId === 1) return localImg1; 
+    return localImg2; 
+  };
+
+  // --- Renderizado de Carga ---
+  if (!selectedBranch) {
+    return <p className="text-center mt-5">Redirigiendo a selección de sucursal...</p>;
+  }
 
   const turnosVisibles = turnos.filter(
     (turno) => turno.status !== "Cancelado" && turno.status !== "Completed"
@@ -335,7 +320,7 @@ const CostumerView = () => {
               <Button 
                 variant="outline-secondary" 
                 size="sm" 
-                onClick={() => navigate("/branches")} // [CORREGIDO] navigate ahora funciona
+                onClick={() => navigate("/branches")}
                 className="mt-2"
                 style={{ maxWidth: "180px" }} 
               >
