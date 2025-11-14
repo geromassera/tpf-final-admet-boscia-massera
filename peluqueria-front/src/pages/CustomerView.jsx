@@ -1,6 +1,15 @@
 import { useContext, useEffect, useState } from "react";
-import { Container, Row, Col, Card, Form, Button, Image, Modal } from "react-bootstrap";
-import { useNavigate } from "react-router-dom"; 
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Form,
+  Button,
+  Image,
+  Modal,
+} from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import {
   successToast,
   errorToast,
@@ -8,15 +17,15 @@ import {
 import { AuthenticationContext } from "../components/services/auth.context";
 import api from "../components/services/API/Axios";
 
-const localImg1 = "/local-placeholder.png"; 
+const localImg1 = "/local-placeholder.png";
 const localImg2 = "/local-placeholder-2.png";
 
 const CostumerView = () => {
   const [turnos, setTurnos] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user } = useContext(AuthenticationContext);
-  const navigate = useNavigate(); 
-  
+  const navigate = useNavigate();
+
   const [selectedBranch, setSelectedBranch] = useState(null);
   const [barbers, setBarbers] = useState([]);
   const [availableHours, setAvailableHours] = useState([]);
@@ -26,7 +35,7 @@ const CostumerView = () => {
     service: "",
     appointment_date: "",
     appointment_time: "",
-    barber_id: ""
+    barber_id: "",
   });
 
   const today = new Date();
@@ -40,10 +49,9 @@ const CostumerView = () => {
     if (storedBranch) {
       const branchData = JSON.parse(storedBranch);
       setSelectedBranch(branchData);
-      // No llamar a fetchResources aquí; se ejecutará por dependencia de selectedBranch
     } else {
-      errorToast("Por favor, selecciona una sucursal primero."); 
-      navigate("/branches"); 
+      errorToast("Por favor, selecciona una sucursal primero.");
+      navigate("/branches");
     }
   }, [navigate]);
 
@@ -85,7 +93,7 @@ const CostumerView = () => {
       }
       try {
         const response = await api.get("appointments/barbers", {
-          params: { branchId: selectedBranch.branchId }
+          params: { branchId: selectedBranch.branchId },
         });
         setBarbers(response.data || []);
       } catch (err) {
@@ -99,7 +107,11 @@ const CostumerView = () => {
 
   useEffect(() => {
     const fetchAvailableHours = async () => {
-      if (!selectedBranch?.branchId || !form.appointment_date || !form.barber_id) {
+      if (
+        !selectedBranch?.branchId ||
+        !form.appointment_date ||
+        !form.barber_id
+      ) {
         setAvailableHours([]);
         return;
       }
@@ -108,8 +120,8 @@ const CostumerView = () => {
           params: {
             branchId: selectedBranch.branchId,
             date: form.appointment_date,
-            barberId: form.barber_id
-          }
+            barberId: form.barber_id,
+          },
         });
         setAvailableHours(response.data || []);
         console.log("Horas disponibles:", response.data);
@@ -126,9 +138,10 @@ const CostumerView = () => {
 
     if (name === "appointment_date") {
       const dia = new Date(value).getDay();
-      // MODIFICACIÓN: Ahora chequea Domingo (0) y Lunes (1)
-      if (dia === 0 || dia === 6) { 
-        errorToast("No podés reservar un turno un domingo o lunes. El local está cerrado.");
+      if (dia === 0 || dia === 6) {
+        errorToast(
+          "No podés reservar un turno un domingo o lunes. El local está cerrado."
+        );
         return;
       }
     }
@@ -138,7 +151,7 @@ const CostumerView = () => {
       [name]: value,
       ...(name === "appointment_date" || name === "barber_id"
         ? { appointment_time: "" }
-        : {})
+        : {}),
     }));
   };
 
@@ -155,7 +168,12 @@ const CostumerView = () => {
       return;
     }
 
-    if (!form.service || !form.appointment_date || !form.appointment_time || !form.barber_id) {
+    if (
+      !form.service ||
+      !form.appointment_date ||
+      !form.appointment_time ||
+      !form.barber_id
+    ) {
       errorToast("Completa todos los campos del turno.");
       return;
     }
@@ -164,7 +182,7 @@ const CostumerView = () => {
       treatmentId: parseInt(form.service, 10),
       barberId: parseInt(form.barber_id, 10),
       branchId: selectedBranch.branchId,
-      appointmentDateTime: form.appointment_time
+      appointmentDateTime: form.appointment_time,
     };
 
     try {
@@ -174,7 +192,7 @@ const CostumerView = () => {
         service: "",
         appointment_date: "",
         appointment_time: "",
-        barber_id: ""
+        barber_id: "",
       });
       setAvailableHours([]);
       fetchTurnosCliente();
@@ -189,13 +207,16 @@ const CostumerView = () => {
   }
 
   const getBranchImage = (branchId) => {
-    if (branchId === 1) return localImg1; 
-    return localImg2; 
+    if (branchId === 1) return localImg1;
+    return localImg2;
   };
 
-  // --- Renderizado de Carga ---
   if (!selectedBranch) {
-    return <p className="text-center mt-5">Redirigiendo a selección de sucursal...</p>;
+    return (
+      <p className="text-center mt-5">
+        Redirigiendo a selección de sucursal...
+      </p>
+    );
   }
 
   const turnosVisibles = turnos.filter(
@@ -269,7 +290,7 @@ const CostumerView = () => {
                     const dateObj = new Date(h);
                     const label = dateObj.toLocaleTimeString([], {
                       hour: "2-digit",
-                      minute: "2-digit"
+                      minute: "2-digit",
                     });
                     return (
                       <option key={idx} value={h}>
@@ -308,22 +329,29 @@ const CostumerView = () => {
               src={getBranchImage(selectedBranch.branchId)}
               fluid
               alt={selectedBranch.name}
-              style={{ maxHeight: "200px", width: "100%", objectFit: "cover", borderRadius: "0.375rem 0 0 0.375rem" }}
+              style={{
+                maxHeight: "200px",
+                width: "100%",
+                objectFit: "cover",
+                borderRadius: "0.375rem 0 0 0.375rem",
+              }}
             />
           </Col>
           <Col md={8}>
             <Card.Body className="d-flex flex-column justify-content-center h-100">
               <Card.Title>Estás reservando en:</Card.Title>
-              <Card.Text as="h4" className="mb-1">{selectedBranch.name}</Card.Text>
+              <Card.Text as="h4" className="mb-1">
+                {selectedBranch.name}
+              </Card.Text>
               <Card.Text className="text-muted">
                 {selectedBranch.address}
               </Card.Text>
-              <Button 
-                variant="outline-secondary" 
-                size="sm" 
+              <Button
+                variant="outline-secondary"
+                size="sm"
                 onClick={() => navigate("/branches")}
                 className="mt-2"
-                style={{ maxWidth: "180px" }} 
+                style={{ maxWidth: "180px" }}
               >
                 Cambiar Sucursal
               </Button>

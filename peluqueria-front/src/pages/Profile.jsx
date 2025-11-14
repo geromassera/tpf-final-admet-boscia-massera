@@ -141,7 +141,6 @@ const Profile = () => {
         const validationErrors = Object.values(err.response.data.errors).flat();
         errorToast(validationErrors[0] || "Error de validación.");
       } else {
-        // Tu lógica de antes
         const message =
           err.response?.data?.message || "Error al actualizar perfil.";
         errorToast(message);

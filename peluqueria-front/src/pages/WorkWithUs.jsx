@@ -4,7 +4,7 @@ import {
   successToast,
   errorToast,
 } from "../components/ui/toast/NotificationToast";
-import { Form, Button, Row, Col } from "react-bootstrap"; // Importamos Form y Button
+import { Form, Button, Row, Col } from "react-bootstrap";
 
 const WorkWithUs = () => {
   const [formData, setFormData] = useState({
@@ -31,7 +31,6 @@ const WorkWithUs = () => {
     const newErrors = {};
     let isValid = true;
 
-    // Validación: Nombre (Máx 50)
     if (!formData.name) {
       newErrors.name = "El nombre es obligatorio.";
       isValid = false;
@@ -40,7 +39,6 @@ const WorkWithUs = () => {
       isValid = false;
     }
 
-    // Validación: Apellido (Máx 50)
     if (!formData.surname) {
       newErrors.surname = "El apellido es obligatorio.";
       isValid = false;
@@ -49,7 +47,6 @@ const WorkWithUs = () => {
       isValid = false;
     }
 
-    // Validación: Email (Máx 60, formato)
     if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Ingrese un email válido.";
       isValid = false;
@@ -58,7 +55,6 @@ const WorkWithUs = () => {
       isValid = false;
     }
 
-    // Validación: Teléfono (10-20 dígitos)
     const phoneRegex = /^\d{10,20}$/;
     const cleanNumber = formData.phone.replace(/[\s-()+\.]/g, "");
     if (!cleanNumber || !phoneRegex.test(cleanNumber)) {
@@ -66,7 +62,6 @@ const WorkWithUs = () => {
       isValid = false;
     }
 
-    // Validación: CV (PDF, Máx 5MB)
     if (!formData.cvFile) {
       newErrors.cvFile = "Debe adjuntar su CV.";
       isValid = false;
@@ -92,19 +87,14 @@ const WorkWithUs = () => {
 
     setIsSubmitting(true);
 
-    // 1. Crear FormData para enviar el archivo
     const data = new FormData();
     data.append("Name", formData.name);
     data.append("Surname", formData.surname);
     data.append("Email", formData.email);
-    // Elimina caracteres no deseados antes de enviar el teléfono
-    data.append("Phone", formData.phone.replace(/[\s-()+\.]/g, "")); 
-    data.append("CvFile", formData.cvFile); // Archivo binario
+    data.append("Phone", formData.phone.replace(/[\s-()+\.]/g, ""));
+    data.append("CvFile", formData.cvFile);
 
     try {
-      // 2. Enviar a la API: /api/curriculum.
-      // Se usa un header 'Content-Type': undefined para que Axios/Browser
-      // genere el header 'multipart/form-data' con el boundary correcto.
       await api.post("/curriculum", data, {
         headers: {
           "Content-Type": undefined,
@@ -113,7 +103,6 @@ const WorkWithUs = () => {
 
       successToast("¡Postulación enviada con éxito! Nos contactaremos pronto.");
 
-      // Resetear el formulario
       setFormData({
         name: "",
         surname: "",
@@ -122,8 +111,7 @@ const WorkWithUs = () => {
         cvFile: null,
       });
       setErrors({});
-      // Es posible que necesites resetear el input[type="file"] manualmente en React.
-      e.target.reset(); 
+      e.target.reset();
     } catch (err) {
       const message =
         err.response?.data?.message || "Error al enviar la postulación.";
@@ -154,7 +142,9 @@ const WorkWithUs = () => {
                 value={formData.name}
                 onChange={handleChange}
               />
-              {errors.name && <div className="invalid-feedback">{errors.name}</div>}
+              {errors.name && (
+                <div className="invalid-feedback">{errors.name}</div>
+              )}
             </div>
             <div className="mb-3">
               <label className="form-label">Apellido</label>
@@ -166,7 +156,9 @@ const WorkWithUs = () => {
                 value={formData.surname}
                 onChange={handleChange}
               />
-              {errors.surname && <div className="invalid-feedback">{errors.surname}</div>}
+              {errors.surname && (
+                <div className="invalid-feedback">{errors.surname}</div>
+              )}
             </div>
 
             <div className="mb-3">
@@ -179,7 +171,9 @@ const WorkWithUs = () => {
                 value={formData.email}
                 onChange={handleChange}
               />
-              {errors.email && <div className="invalid-feedback">{errors.email}</div>}
+              {errors.email && (
+                <div className="invalid-feedback">{errors.email}</div>
+              )}
             </div>
 
             <div className="mb-3">
@@ -192,7 +186,9 @@ const WorkWithUs = () => {
                 value={formData.phone}
                 onChange={handleChange}
               />
-              {errors.phone && <div className="invalid-feedback">{errors.phone}</div>}
+              {errors.phone && (
+                <div className="invalid-feedback">{errors.phone}</div>
+              )}
             </div>
 
             <div className="mb-3">
@@ -203,10 +199,12 @@ const WorkWithUs = () => {
                 type="file"
                 name="cvFile"
                 className={`form-control ${errors.cvFile ? "is-invalid" : ""}`}
-                accept=".pdf" // Sugerencia de archivo PDF en el diálogo
+                accept=".pdf"
                 onChange={handleChange}
               />
-              {errors.cvFile && <div className="invalid-feedback">{errors.cvFile}</div>}
+              {errors.cvFile && (
+                <div className="invalid-feedback">{errors.cvFile}</div>
+              )}
             </div>
 
             <div className="text-center">
@@ -222,4 +220,3 @@ const WorkWithUs = () => {
 };
 
 export default WorkWithUs;
-

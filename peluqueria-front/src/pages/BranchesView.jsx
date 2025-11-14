@@ -14,26 +14,23 @@ const BranchesView = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Importá imágenes del /public 
   const BranchImg1 = "/local-placeholder.png";
   const BranchImg2 = "/local-placeholder-2.png";
-  const DefaultImg = "/default-branch.png"; 
-
+  const DefaultImg = "/default-branch.png";
 
   const staticBranchImages = {
     "Sucursal Centro": BranchImg1,
-    "Sucursal Norte": BranchImg2
+    "Sucursal Norte": BranchImg2,
   };
 
   useEffect(() => {
     const fetchBranches = async () => {
       try {
-        // Mantenemos la ruta plural "/branches" según tu indicación
-        const response = await api.get("/branches"); 
+        const response = await api.get("/branches");
         setBranches(response.data);
       } catch (error) {
         console.error("Error al obtener sucursales:", error);
-        errorToast("Error al cargar sucursales. Verifique la API."); // Añadido toast de error
+        errorToast("Error al cargar sucursales.");
       } finally {
         setLoading(false);
       }
@@ -47,9 +44,7 @@ const BranchesView = () => {
     navigate("/appointments");
   };
 
-  // [NUEVO] Función helper para asignar la imagen estática
   const getBranchImage = (branchId) => {
-    // Asigna la imagen 1 si el ID es 1, o la imagen 2 para el resto (Norte/Sur, etc.)
     if (branchId === 1) return localImg1;
     return localImg2;
   };
@@ -74,7 +69,9 @@ const BranchesView = () => {
     <Container className="mt-5">
       <div className="text-center mb-5">
         <h2 className="display-5 fw-bold">Elegí tu sucursal</h2>
-        <p className="text-muted">Seleccioná una de nuestras sucursales para reservar tu turno.</p>
+        <p className="text-muted">
+          Seleccioná una de nuestras sucursales para reservar tu turno.
+        </p>
       </div>
 
       <Row className="g-4 justify-content-center">
@@ -85,11 +82,7 @@ const BranchesView = () => {
           return (
             <Col md={4} key={branch.branchId}>
               <Card className="h-100 shadow-sm">
-                <Card.Img
-                  variant="top"
-                  src={imageToShow}
-                  alt={branch.name}
-                />
+                <Card.Img variant="top" src={imageToShow} alt={branch.name} />
 
                 <Card.Body>
                   <Card.Title>{branch.name}</Card.Title>
@@ -97,7 +90,10 @@ const BranchesView = () => {
                     <strong>Dirección:</strong> {branch.address}
                   </Card.Text>
 
-                  <Button variant="primary" onClick={() => handleSelectBranch(branch)}>
+                  <Button
+                    variant="primary"
+                    onClick={() => handleSelectBranch(branch)}
+                  >
                     Seleccionar
                   </Button>
                 </Card.Body>
