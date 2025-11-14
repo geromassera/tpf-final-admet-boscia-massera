@@ -8,12 +8,12 @@ const BranchesView = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Importá imágenes del /public
+  // Importá imágenes del /public 
   const BranchImg1 = "/local-placeholder.png";
   const BranchImg2 = "/local-placeholder-2.png";
-  const DefaultImg = "/default-branch.png"; // por si no coincide ninguna
+  const DefaultImg = "/default-branch.png"; 
 
-  // Asignación por nombre
+
   const staticBranchImages = {
     "Sucursal Centro": BranchImg1,
     "Sucursal Norte": BranchImg2
