@@ -126,7 +126,8 @@ const CostumerView = () => {
 
     if (name === "appointment_date") {
       const dia = new Date(value).getDay();
-      if (dia === 0) {
+      // MODIFICACIÓN: Ahora chequea Domingo (0) y Lunes (1)
+      if (dia === 0 || dia === 6) { 
         errorToast("No podés reservar un turno un domingo o lunes. El local está cerrado.");
         return;
       }

@@ -64,7 +64,7 @@ const BarberView = () => {
 
   return (
     <div className="container mt-5">
-      <h3>Mi Agenda de Turnos</h3>
+      <h3 className="mb-4">Mi Agenda de Turnos</h3>
 
       {/* Controles de Filtros */}
       <Form as={Row} className="mb-4 g-3 bg-light p-3 border rounded">
