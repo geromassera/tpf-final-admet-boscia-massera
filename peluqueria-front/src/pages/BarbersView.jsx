@@ -7,6 +7,13 @@ import {
 import { AuthenticationContext } from "../components/services/auth.context";
 import api from "../components/services/API/Axios";
 
+const statusMap = {
+  "Confirmed": "Confirmado",
+  "Cancelled": "Cancelado",
+  "Completed": "Terminado",
+  // Nota: El backend de ASP.NET Core maneja 'Confirmed', 'Cancelled', y 'Completed' (al pasar la fecha)
+};
+
 const BarberView = () => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -108,7 +115,7 @@ const BarberView = () => {
                 <td>{appt.clientPhone}</td>
                 <td>{appt.treatmentName}</td>
                 <td>{new Date(appt.appointmentDateTime).toLocaleString()}</td> 
-                <td>{appt.status}</td>
+                <td>{statusMap[appt.status] || appt.status}</td>
                 <td>
                   <Button
                     variant="danger"
