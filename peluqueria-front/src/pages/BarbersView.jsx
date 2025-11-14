@@ -7,11 +7,11 @@ import {
 import { AuthenticationContext } from "../components/services/auth.context";
 import api from "../components/services/API/Axios";
 
+// Mapa de traducción de estados
 const statusMap = {
-  "Confirmed": "Confirmado",
-  "Cancelled": "Cancelado",
-  "Completed": "Terminado",
-  // Nota: El backend de ASP.NET Core maneja 'Confirmed', 'Cancelled', y 'Completed' (al pasar la fecha)
+  Confirmed: "Confirmado",
+  Cancelled: "Cancelado",
+  Completed: "Terminado",
 };
 
 const BarberView = () => {
@@ -24,14 +24,9 @@ const BarberView = () => {
   const fetchAppointments = async () => {
     setLoading(true);
     try {
-      // Si filterDate tiene un valor, se añade como parámetro de consulta 'date'
       const dateQuery = filterDate ? `?date=${filterDate}` : '';
-      
-      // Llamada al endpoint con el parámetro de fecha opcional
       const response = await api.get(`/appointments/barber/schedule${dateQuery}`);
-      
       setAppointments(response.data); 
-      
     } catch (err) {
       errorToast(err.response?.data?.message || "Error al obtener turnos.");
     } finally {
@@ -42,7 +37,6 @@ const BarberView = () => {
   const handleCancelAppointment = async (appointmentId) => {
     try {
       await api.put(`/appointments/${appointmentId}/cancel`);
-      
       successToast("Turno cancelado correctamente.");
       fetchAppointments();
     } catch (err) {
@@ -50,13 +44,11 @@ const BarberView = () => {
     }
   };
   
-  // Vuelve a cargar los turnos cada vez que filterDate cambia
   useEffect(() => {
     fetchAppointments();
   }, [filterDate]);
 
   const handleClearFilter = () => {
-    // Si el filtro se limpia, vuelve a la fecha de hoy por defecto.
     setFilterDate(new Date().toISOString().split('T')[0]);
   };
 
@@ -72,9 +64,9 @@ const BarberView = () => {
 
   return (
     <div className="container mt-5">
-      <h3 className="mb-4">Mi Agenda de Turnos</h3>
+      <h3>Mi Agenda de Turnos</h3>
 
-      {/* [NUEVO] Controles de Filtros */}
+      {/* Controles de Filtros */}
       <Form as={Row} className="mb-4 g-3 bg-light p-3 border rounded">
         <Form.Group as={Col} md="8" controlId="filterAppointmentDate">
           <Form.Label>Filtrar por Fecha de Turno</Form.Label>
@@ -103,6 +95,7 @@ const BarberView = () => {
               <th>Cliente</th>
               <th>Teléfono</th>
               <th>Servicio</th>
+              <th>Precio</th>
               <th>Fecha y Hora</th>
               <th>Estado</th>
               <th>Acciones</th>
@@ -114,8 +107,10 @@ const BarberView = () => {
                 <td>{appt.clientName}</td>
                 <td>{appt.clientPhone}</td>
                 <td>{appt.treatmentName}</td>
+                {/* [CORRECCIÓN] Cambiado de treatmentPrice a 'price' */}
+                <td>$ {appt.price}</td> 
                 <td>{new Date(appt.appointmentDateTime).toLocaleString()}</td> 
-                <td>{statusMap[appt.status] || appt.status}</td>
+                <td>{statusMap[appt.status] || appt.status}</td> 
                 <td>
                   <Button
                     variant="danger"

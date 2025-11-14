@@ -1,5 +1,6 @@
 import { useContext, useEffect, useState } from "react";
-import { Container, Row, Col, Card, Form, Button } from "react-bootstrap";
+import { Container, Row, Col, Card, Form, Button, Image } from "react-bootstrap";
+import { useNavigate } from "react-router-dom"; 
 import {
   successToast,
   errorToast,
@@ -7,12 +8,18 @@ import {
 import { AuthenticationContext } from "../components/services/auth.context";
 import api from "../components/services/API/Axios";
 
+const localImg1 = "/local-placeholder.png"; 
+const localImg2 = "/local-placeholder-2.png";
+
 const CostumerView = () => {
   const [turnos, setTurnos] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user } = useContext(AuthenticationContext);
-
   const [selectedBranch, setSelectedBranch] = useState(null);
+  const navigate = useNavigate(); 
+  const [availableBarbers, setAvailableBarbers] = useState([]);
+  const [availableTreatments, setAvailableTreatments] = useState([]);
+  const [loadingResources, setLoadingResources] = useState(true);
 
   const [form, setForm] = useState({
     service: "",
@@ -32,8 +39,44 @@ const CostumerView = () => {
     const storedBranch = localStorage.getItem("selectedBranch");
     if (storedBranch) {
       setSelectedBranch(JSON.parse(storedBranch));
+    } else {
+      errorToast("Por favor, selecciona una sucursal primero."); 
+      navigate("/branches"); 
     }
-  }, []);
+  }, [navigate]); 
+
+   useEffect(() => {
+    // Solo ejecutar si la sucursal ha sido cargada
+    if (selectedBranch) {
+      const fetchResources = async () => {
+        setLoadingResources(true);
+        try {
+          // Hacemos ambas llamadas en paralelo
+          const [barbersRes, treatmentsRes] = await Promise.all([
+            api.get("/user/barbers"), // Endpoint público que trae TODOS los barberos
+            api.get("/treatment")     // Endpoint (autenticado) que trae los servicios
+          ]);
+          
+          // 1. Filtrar barberos por la sucursal seleccionada
+          const filteredBarbers = barbersRes.data.filter(
+            (barber) => barber.branchId === selectedBranch.branchId
+          );
+          setAvailableBarbers(filteredBarbers);
+
+          // 2. Cargar servicios
+          setAvailableTreatments(treatmentsRes.data);
+          
+        } catch (err) {
+          errorToast(err.response?.data?.message || "Error al cargar barberos o servicios.");
+        } finally {
+          setLoadingResources(false);
+        }
+      };
+      
+      fetchResources();
+    }
+  }, [selectedBranch]);
+
 
   const fetchTurnosCliente = async () => {
     if (!user?.userId) {
@@ -115,8 +158,19 @@ const CostumerView = () => {
   };
 
   useEffect(() => {
-    fetchTurnosCliente();
+    if(user){ 
+        fetchTurnosCliente();
+    }
   }, [user]);
+
+  const getBranchImage = (branchId) => {
+    if (branchId === 1) return localImg1; 
+    return localImg2; 
+  };
+
+  if (!selectedBranch) {
+    return <p className="text-center mt-5">Redirigiendo a selección de sucursal...</p>;
+  }
 
   const generarOpcionesHora = () => {
     const opciones = [];
@@ -128,9 +182,18 @@ const CostumerView = () => {
     return opciones;
   };
 
-  if (loading) {
-    return <p className="text-center mt-5">Cargando tus turnos...</p>;
+  if (loading && turnos.length === 0) { 
+    return (
+        <Container className="mt-5">
+            {/* Muestra la tarjeta de sucursal aunque los turnos estén cargando */}
+            <Card className="mb-4 shadow-sm">
+                {/* ... (Tarjeta de Sucursal) ... */}
+            </Card>
+            <p className="text-center mt-5">Cargando tus turnos...</p>
+        </Container>
+    );
   }
+
 
   const turnosVisibles = turnos.filter(
     (turno) => turno.status !== "Cancelado" && turno.status !== "Completed"
@@ -191,15 +254,22 @@ const CostumerView = () => {
 
               <Col md={3}>
                 <Form.Select
-                  name="barber_id"
+                  name="barber_id" // Este es el 'userId' del barbero
                   value={form.barber_id}
                   onChange={handleChange}
                   required
+                  disabled={loadingResources}
                 >
-                  <option value="any">Barbero </option>
-                  <option value="Martin">Martin</option>
-                  <option value="Laura">Laura</option>
-                  <option value="Julián">Julián</option>
+                  <option value="">Selecciona un barbero</option>
+                  {availableBarbers.length === 0 ? (
+                    <option value="" disabled>No hay barberos en esta sucursal</option>
+                  ) : (
+                    availableBarbers.map(barber => (
+                      <option key={barber.userId} value={barber.userId}>
+                        {barber.name} {barber.surname}
+                      </option>
+                    ))
+                  )}
                 </Form.Select>
               </Col>
 
@@ -216,6 +286,37 @@ const CostumerView = () => {
             </Row>
           </Form>
         </Card.Body>
+      </Card>
+
+      <Card className="mb-4 shadow-sm">
+        <Row className="g-0">
+          <Col md={4}>
+            <Image
+              src={getBranchImage(selectedBranch.branchId)}
+              fluid
+              alt={selectedBranch.name}
+              style={{ maxHeight: "200px", width: "100%", objectFit: "cover", borderRadius: "0.375rem 0 0 0.375rem" }}
+            />
+          </Col>
+          <Col md={8}>
+            <Card.Body className="d-flex flex-column justify-content-center h-100">
+              <Card.Title>Estás reservando en:</Card.Title>
+              <Card.Text as="h4" className="mb-1">{selectedBranch.name}</Card.Text>
+              <Card.Text className="text-muted">
+                {selectedBranch.address}
+              </Card.Text>
+              <Button 
+                variant="outline-secondary" 
+                size="sm" 
+                onClick={() => navigate("/branches")} // [CORREGIDO] navigate ahora funciona
+                className="mt-2"
+                style={{ maxWidth: "180px" }} 
+              >
+                Cambiar Sucursal
+              </Button>
+            </Card.Body>
+          </Col>
+        </Row>
       </Card>
 
       <Card className="p-4 shadow">
